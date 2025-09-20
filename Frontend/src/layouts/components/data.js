@@ -1,5 +1,6 @@
 import { TbBellRinging, TbCreditCard, TbHeadset, TbLock, TbLogout2, TbSettings2, TbUserCircle } from 'react-icons/tb';
 import { LuBookUser, LuCalendar, LuChartPie, LuCircleGauge, LuCommand, LuFingerprint, LuLayers2, LuMapPin, LuNotebookText, LuPencilRuler, LuShieldBan, LuSparkles, LuSquarePi, LuTable2 } from 'react-icons/lu';
+import { HiOutlineUserGroup } from "react-icons/hi2";
 export const userDropdownItems = [{
   label: 'Welcome back!',
   isHeader: true
@@ -39,7 +40,13 @@ export const menuItems = [{
   key: 'dashboard',
   label: 'Dashboard',
   icon: LuCircleGauge,
-  url: '/dashboard'
+  url: '/admin/dashboard'
+},
+{
+  key:'category'
+  ,label:'Category',
+  icon: HiOutlineUserGroup,
+  url:'/admin/category'
 }, {
   key: 'ton-ai',
   label: 'Ton AI',

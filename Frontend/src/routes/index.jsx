@@ -202,11 +202,16 @@
 import { lazy } from 'react';
 import { Navigate } from 'react-router';
 import MainLayout from "@/layouts/MainLayout";
+import ProtectedRoute from "@/components/ProtectedRoute";
+
+
 
 const Dashboard = lazy(() => import('@/views/dashboard'));
 const AuthLogIn = lazy(() => import('@/views/auth/log-in'));
 const Error404 = lazy(() => import('@/views/error/404'));
+const Category = lazy(() => import('@/views/category'));
 
+//login
 const authRoutes = [
   {
     path: '/admin/log-in',
@@ -214,11 +219,14 @@ const authRoutes = [
   },
 ];
 
+//error 
 const errorRoutes = [{
   path: '/admin/error/404',
   element: <Error404 />
 }];
 
+
+//admin dashboard
 const dashboardRoutes = [
   {
     path: '/admin/dashboard',
@@ -226,22 +234,33 @@ const dashboardRoutes = [
   },
 ];
 
+//category
+const categoryRoutes = [
+  { 
+    path: '/admin/category',
+    element: <Category />,
+  
+  },
+];
 
-
-
+//admin routes wrapped in main layout and protected route
 const adminRoutes = [
   {
-    element: <MainLayout />,
+    element: (
+      <ProtectedRoute role="admin">
+        <MainLayout />
+      </ProtectedRoute>
+    ),
     children: [
       {
         path: '/',
         element: <Navigate to="/admin/dashboard" replace />,
       },
-      ...dashboardRoutes,
+      ...dashboardRoutes,...categoryRoutes,
     ],
   },
 ];
 
-
-const otherRoutes = [...authRoutes,...errorRoutes,];
+//combine all routes  
+const otherRoutes = [...authRoutes, ...errorRoutes,];
 export const routes = [...adminRoutes, ...otherRoutes];
