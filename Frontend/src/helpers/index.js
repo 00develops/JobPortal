@@ -1,9 +1,9 @@
 export const currency = '$';
 export const currentYear = new Date().getFullYear();
-export const appName = 'Simple';
-export const appTitle = 'Simple - Responsive Bootstrap 5 Admin Dashboard';
-export const appDescription = 'Perfect for building CRM, CMS, project management tools, and custom web apps with clean UI, responsive design, and powerful features.';
-export const author = 'Coderthemes';
-export const authorWebsite = 'https://coderthemes.com/';
+export const appName = 'Job Portal Admin';
+export const appTitle = 'Job Portal Admin Dashboard';
+export const appDescription = 'Project management tools, web Dashboard, and powerful features.';
+export const author = 'Shivam';
+export const authorWebsite = 'https://innovativemodernengineers.com/';
 export const authorContact = '';
 export const basePath = '';
