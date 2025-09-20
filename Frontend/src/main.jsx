@@ -1,7 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import App from './App';
-import { BrowserRouter } from "react-router";
+import { RouterProvider, createBrowserRouter } from 'react-router-dom';
+import { routes } from './routes';
 import AppWrapper from '@/components/AppWrapper';
 import 'leaflet/dist/leaflet.css';
 import 'jsvectormap/dist/css/jsvectormap.min.css';
@@ -14,10 +14,13 @@ import 'react-quill-new/dist/quill.bubble.css';
 import 'flatpickr/dist/flatpickr.min.css';
 import 'react-bootstrap-typeahead/css/Typeahead.css';
 import '@/assets/scss/app.scss';
-createRoot(document.getElementById('root')).render(<StrictMode>
-        <BrowserRouter>
-            <AppWrapper>
-                <App />
-            </AppWrapper>
-        </BrowserRouter>
-    </StrictMode>);
+
+const router = createBrowserRouter(routes);
+
+createRoot(document.getElementById('root')).render(
+  <StrictMode>
+    <AppWrapper>
+      <RouterProvider router={router} />
+    </AppWrapper>
+  </StrictMode>
+);
