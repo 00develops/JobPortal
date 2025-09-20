@@ -204,14 +204,13 @@ import { Navigate } from 'react-router';
 import MainLayout from "@/layouts/MainLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
-
-
 const Dashboard = lazy(() => import('@/views/dashboard'));
 const AuthLogIn = lazy(() => import('@/views/auth/log-in'));
 const Error404 = lazy(() => import('@/views/error/404'));
-const Category = lazy(() => import('@/views/category'));
+const Category = lazy(() => import('@/views/category')); // single category component
+const SubCategory = lazy(() => import('@/views/subcategory')); // single category component
 
-//login
+// login
 const authRoutes = [
   {
     path: '/admin/log-in',
@@ -219,14 +218,15 @@ const authRoutes = [
   },
 ];
 
-//error 
-const errorRoutes = [{
-  path: '/admin/error/404',
-  element: <Error404 />
-}];
+// error
+const errorRoutes = [
+  {
+    path: '/admin/error/404',
+    element: <Error404 />,
+  },
+];
 
-
-//admin dashboard
+// dashboard
 const dashboardRoutes = [
   {
     path: '/admin/dashboard',
@@ -234,16 +234,19 @@ const dashboardRoutes = [
   },
 ];
 
-//category
+// category (single route handles both category + sub-category view logic)
 const categoryRoutes = [
-  { 
+  {
     path: '/admin/category',
     element: <Category />,
-  
+  },
+  {
+    path: '/admin/sub-category',
+    element: <SubCategory />, // reuse Category component
   },
 ];
 
-//admin routes wrapped in main layout and protected route
+// admin routes wrapped in main layout + protected route
 const adminRoutes = [
   {
     element: (
@@ -256,11 +259,11 @@ const adminRoutes = [
         path: '/',
         element: <Navigate to="/admin/dashboard" replace />,
       },
-      ...dashboardRoutes,...categoryRoutes,
+      ...dashboardRoutes,
+      ...categoryRoutes,
     ],
   },
 ];
 
-//combine all routes  
-const otherRoutes = [...authRoutes, ...errorRoutes,];
+const otherRoutes = [...authRoutes, ...errorRoutes];
 export const routes = [...adminRoutes, ...otherRoutes];

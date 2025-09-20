@@ -1,6 +1,6 @@
 const App = () => {
   return <>
-  <h1>Category</h1>
+  <h1>Sub Category</h1>
   
   </>};
 export default App;
