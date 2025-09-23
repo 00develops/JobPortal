@@ -204,11 +204,16 @@ import { Navigate } from 'react-router';
 import MainLayout from "@/layouts/MainLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
+
 const Dashboard = lazy(() => import('@/views/dashboard'));
 const AuthLogIn = lazy(() => import('@/views/auth/log-in'));
 const Error404 = lazy(() => import('@/views/error/404'));
 const Category = lazy(() => import('@/views/category')); // single category component
 const SubCategory = lazy(() => import('@/views/subcategory')); // single category component
+const AddCategory = lazy(() => import('@/views/category/components/AddCategory'));
+const EditCategory = lazy(() => import('@/views/category/components/EditCategory'));
+
+
 
 // login
 const authRoutes = [
@@ -241,9 +246,19 @@ const categoryRoutes = [
     element: <Category />,
   },
   {
+
+    path:'/admin/category/add',
+    element:<AddCategory/>
+  },
+  { 
+    path: '/admin/category/edit/:id',
+     element: <EditCategory />
+   }, 
+  {
     path: '/admin/sub-category',
     element: <SubCategory />, // reuse Category component
   },
+ 
 ];
 
 // admin routes wrapped in main layout + protected route
