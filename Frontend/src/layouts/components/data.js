@@ -1,6 +1,8 @@
 import { TbBellRinging, TbCreditCard, TbHeadset, TbLock, TbLogout2, TbSettings2, TbUserCircle } from 'react-icons/tb';
 import { LuBookUser, LuCalendar, LuChartPie, LuCircleGauge, LuCommand, LuFingerprint, LuLayers2, LuMapPin, LuNotebookText, LuPencilRuler, LuShieldBan, LuSparkles, LuSquarePi, LuTable2 } from 'react-icons/lu';
 import { HiOutlineUserGroup } from "react-icons/hi2";
+import { BsBriefcaseFill } from "react-icons/bs";
+
 export const userDropdownItems = [{
   label: 'Welcome back!',
   isHeader: true
@@ -59,5 +61,14 @@ export const menuItems = [{
     label:'SubCategory',
     url:'/admin/sub-category'
 },
-]
-} ];
+]},
+{
+  key:'manage-jobs',
+  label:'Manage Jobs',
+  icon:BsBriefcaseFill,
+  children:[{
+    key:'job',
+    label:'Job',
+    url:'/admin/jobs'
+  },]},
+ ];

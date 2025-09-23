@@ -97,7 +97,7 @@ const EditCategory = () => {
                     >
                         <option value={0}>Active</option>
                         <option value={1}>Inactive</option>
-                        <option value={2}>Deleted</option>
+                        
                     </select>
                 </div>
 

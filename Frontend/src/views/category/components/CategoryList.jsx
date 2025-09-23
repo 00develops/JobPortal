@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Container, Row, Col, Dropdown, DropdownMenu, DropdownItem, DropdownToggle } from "react-bootstrap";
+import { Container, Row, Col, Dropdown } from "react-bootstrap";
 import TableList from "@/components/table/TableList";
 import { createRoot } from "react-dom/client";
 import { TbDotsVertical, TbEdit, TbTrash } from "react-icons/tb";
@@ -8,16 +8,20 @@ import { useNavigate } from "react-router-dom";
 
 const CategoryList = () => {
   const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   // Fetch categories
   const fetchCategories = async () => {
+    setLoading(true);
     try {
       const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/categories`);
       setCategories(res.data || []);
     } catch (err) {
       console.error(err);
       setCategories([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -25,16 +29,21 @@ const CategoryList = () => {
     fetchCategories();
   }, []);
 
+  // Delete category
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this category?")) return;
-    try {
-      await axios.delete(`${import.meta.env.VITE_BASE_URL}/api/categories/${id}`);
-      fetchCategories(); // refresh list
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  if (!id) return console.error("Invalid category ID");
+  if (!window.confirm("Are you sure you want to delete this category?")) return;
 
+  try {
+    console.log("Deleting category ID:", id); // Debug
+    const res = await axios.delete(`${import.meta.env.VITE_BASE_URL}/api/categories/${id}`);
+    alert(res.data.message || "Category deleted successfully");
+    fetchCategories(); // Refresh after delete
+  } catch (err) {
+    console.error("Delete error:", err.response || err);
+    alert(err.response?.data?.message || "Failed to delete category");
+  }
+};
   const columns = [
     { title: "Name", data: "categoryName" },
     { title: "SKU", data: "categorySKU" },
@@ -53,9 +62,7 @@ const CategoryList = () => {
         if (cellData) {
           const imgUrl = `${import.meta.env.VITE_BASE_URL}${cellData}`;
           td.innerHTML = `<img src="${imgUrl}" alt="img" width="50"/>`;
-        } else {
-          td.innerHTML = "";
-        }
+        } else td.innerHTML = "";
       },
     },
     {
@@ -67,24 +74,21 @@ const CategoryList = () => {
         const root = createRoot(td);
         root.render(
           <Dropdown align="end" className="text-muted">
-            <DropdownToggle variant="link" className="drop-arrow-none p-0">
+            <Dropdown.Toggle variant="link" className="drop-arrow-none p-0">
               <TbDotsVertical />
-            </DropdownToggle>
-            <DropdownMenu>
-              <DropdownItem
-                onClick={() =>
-                  navigate(`/admin/category/edit/${rowData._id}`, { state: rowData })
-                }
+            </Dropdown.Toggle>
+            <Dropdown.Menu>
+              <Dropdown.Item
+                onClick={() => navigate(`/admin/category/edit/${rowData._id}`, { state: rowData })}
               >
                 <TbEdit className="me-1" /> Edit
-              </DropdownItem>
-              <DropdownItem
+              </Dropdown.Item>
+              <Dropdown.Item
                 className="text-danger"
-                onClick={() => handleDelete(rowData._id)}
-              >
+               onClick={() => handleDelete(rowData._id)}>
                 <TbTrash className="me-1" /> Delete
-              </DropdownItem>
-            </DropdownMenu>
+              </Dropdown.Item>
+            </Dropdown.Menu>
           </Dropdown>
         );
       },
@@ -98,8 +102,9 @@ const CategoryList = () => {
           <TableList
             data={categories}
             columns={columns}
-            options={{ pageLength: 10 }}
+            options={{ responsive: true, pageLength: 10 }}
             className="table table-striped dt-responsive w-100"
+            loading={loading}
           />
         </Col>
       </Row>

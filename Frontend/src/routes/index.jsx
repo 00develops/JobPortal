@@ -212,6 +212,13 @@ const Category = lazy(() => import('@/views/category')); // single category comp
 const SubCategory = lazy(() => import('@/views/subcategory')); // single category component
 const AddCategory = lazy(() => import('@/views/category/components/AddCategory'));
 const EditCategory = lazy(() => import('@/views/category/components/EditCategory'));
+const AddSubCategory = lazy(() => import('@/views/subcategory/components/AddSubCategory'));
+const EditSubCategory = lazy(() => import('@/views/subcategory/components/EditSubCategory'));
+const Jobs = lazy(() => import('@/views/jobs')); 
+const EditJob = lazy(() => import('@/views/jobs/components/EditJob'));
+const AddJob = lazy(() => import('@/views/jobs/components/AddJob'));
+
+
 
 
 
@@ -258,7 +265,27 @@ const categoryRoutes = [
     path: '/admin/sub-category',
     element: <SubCategory />, // reuse Category component
   },
- 
+  {
+    path:'admin/sub-category/add',
+    element:<AddSubCategory/>
+  },{
+    path:'admin/sub-category/edit/:id',
+    element:<EditSubCategory/>
+  },
+];
+
+//job routes
+const jobRoutes=[{
+   path: '/admin/Jobs',
+    element: <Jobs/>,
+},{
+   path: '/admin/Jobs/add',
+    element: <AddJob/>,
+},
+{
+   path: '/admin/Jobs/edit/:id',
+    element: <EditJob/>,
+},
 ];
 
 // admin routes wrapped in main layout + protected route
@@ -276,6 +303,7 @@ const adminRoutes = [
       },
       ...dashboardRoutes,
       ...categoryRoutes,
+      ...jobRoutes,
     ],
   },
 ];
