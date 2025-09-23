@@ -3,14 +3,16 @@ const {
   createJob,
   getJobs,
   getJobById,
+  updateJob,
   deleteJob
-} = require("../controllers/jobController"); // <-- no .js if using require sometimes
+} = require("../controllers/jobController");
 
 const router = express.Router();
 
-router.post("/", createJob);          
-router.get("/", getJobs);             
-router.get("/:id", getJobById);       
-router.delete("/:id", deleteJob);     
+router.post("/", createJob);
+router.get("/", getJobs);
+router.get("/:id", getJobById);
+router.put("/:id", updateJob);   // <-- added
+router.delete("/:id", deleteJob);
 
 module.exports = router;

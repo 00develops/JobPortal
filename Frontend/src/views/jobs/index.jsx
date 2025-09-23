@@ -3,12 +3,13 @@ import { Link } from "react-router-dom";
 import JobList from './components/JobList';
 
 
-import { Col, Nav, NavItem, NavLink, Row, TabContainer, TabContent, TabPane } from 'react-bootstrap';
+
+import {  Nav, NavItem, NavLink, Row, TabContainer, TabContent, TabPane } from 'react-bootstrap';
 import { TbBriefcase, TbHome, TbInfoCircle, TbMail, TbSettings, TbUser, TbUserCircle } from 'react-icons/tb';
 
 const Page = () => {
     return <>
-        <card className="mt-2 pb-3">
+        <div className="mt-2 pb-3">
             <div className="d-flex justify-content-between align-items-center mb-3">
                 <h5 className="mb-0">Job List</h5>
                 <Link to="/admin/jobs/add" className="btn btn-sm btn-primary">
@@ -31,7 +32,7 @@ const Page = () => {
                     </TabPane>
                 </TabContent>
             </TabContainer>
-        </card >
+        </div >
     </>;
 };
 export default Page;

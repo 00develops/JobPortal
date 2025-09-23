@@ -8,7 +8,7 @@ import { TbBriefcase, TbHome, TbInfoCircle, TbMail, TbSettings, TbUser, TbUserCi
 
 const Page = () => {
     return <>
-        <card className="mt-2 pb-3">
+        <div className="mt-2 pb-3">
             <div className="d-flex justify-content-between align-items-center mb-3">
                 <h5 className="mb-0">Category List</h5>
                 <Link to="/admin/category/add" className="btn btn-sm btn-primary">
@@ -31,7 +31,7 @@ const Page = () => {
                     </TabPane>
                 </TabContent>
             </TabContainer>
-        </card >
+        </div >
     </>;
 };
 export default Page;
