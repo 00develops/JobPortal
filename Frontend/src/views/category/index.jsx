@@ -5,17 +5,12 @@ import CategoryList from './components/CategoryList';
 
 import { Col, Nav, NavItem, NavLink, Row, TabContainer, TabContent, TabPane } from 'react-bootstrap';
 import { TbBriefcase, TbHome, TbInfoCircle, TbMail, TbSettings, TbUser, TbUserCircle } from 'react-icons/tb';
+import { appTitle } from '@/helpers';
 
 const Page = () => {
     return <>
-        <div className="mt-2 pb-3">
-            <div className="d-flex justify-content-between align-items-center mb-3">
-                <h5 className="mb-0">Category List</h5>
-                <Link to="/admin/category/add" className="btn btn-sm btn-primary">
-                    + Add Category
-                </Link>
-            </div>
-
+        <div className="mt-4 pb-3">
+           
             <TabContainer defaultActiveKey="Category-List">
                 <Nav className="nav-tabs nav-bordered mb-3">
                     <NavItem>
@@ -25,11 +20,13 @@ const Page = () => {
                     </NavItem>
 
                 </Nav>
-                <TabContent>
+                <ComponentCard title="List"isLink={<Link to="/admin/category/add" >
+                    + Add Category
+                </Link>}>
                     <TabPane eventKey="Category-List" >
                         <CategoryList />
                     </TabPane>
-                </TabContent>
+                </ComponentCard>
             </TabContainer>
         </div >
     </>;

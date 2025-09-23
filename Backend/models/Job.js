@@ -15,7 +15,7 @@ const jobSchema = new mongoose.Schema(
     qualification: { type: String, required: true },
     finalYearEligible: { type: Boolean, default: false },
     experienceRequired: { type: Boolean, default: false },
-    genderRestriction: { type: String, enum: ["None", "Male", "Female"], default: "None" },
+    genderRestriction: { type: String, enum: ["None", "Male", "Female","Other","All"], default: "None" },
     categoryReservation: [{ type: String, enum: ["UR", "OBC", "SC", "ST", "EWS"] }],
     jobLocation: { type: String, required: true },
     selectionProcess: [{ type: String, enum: ["Tier-I", "Tier-II", "Interview", "DV", "Medical"] }],

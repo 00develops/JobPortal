@@ -8,7 +8,10 @@ import jszip from "jszip";
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
 
-// Fix: pdfFonts might be default export
+// Attach JSZip globally so DataTables can use it
+window.JSZip = jszip;
+
+// Fix pdfMake fonts
 pdfMake.vfs = pdfFonts?.default?.vfs || pdfFonts.vfs;
 
 const TableList = ({ data = [], columns = [], options = {}, className }) => {
@@ -18,7 +21,6 @@ const TableList = ({ data = [], columns = [], options = {}, className }) => {
   useEffect(() => {
     if (!tableRef.current) return;
 
-    // Destroy previous instance if exists
     if (dtInstance.current) {
       $(tableRef.current).DataTable().destroy();
       $(tableRef.current).empty();
@@ -27,11 +29,21 @@ const TableList = ({ data = [], columns = [], options = {}, className }) => {
     dtInstance.current = $(tableRef.current).DataTable({
       data,
       columns,
-      dom: "Bfrtip",
-      buttons: ["copy", "csv", "excel", "pdf"],
+      dom: `<"d-flex justify-content-between mb-2"
+              <"dt-buttons"B>
+              <"dataTables_filter"f>
+            >rtip`,
+      buttons: [
+        { extend: "copyHtml5", className: "btn btn-sm btn-secondary" },
+        { extend: "csvHtml5", className: "btn btn-sm btn-secondary" },
+        { extend: "excelHtml5", className: "btn btn-sm btn-secondary" },
+        { extend: "pdfHtml5", className: "btn btn-sm btn-secondary" },
+      ],
       responsive: true,
       ...options,
     });
+
+  
 
     return () => {
       if (dtInstance.current) dtInstance.current.destroy();

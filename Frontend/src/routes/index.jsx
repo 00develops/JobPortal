@@ -217,6 +217,7 @@ const EditSubCategory = lazy(() => import('@/views/subcategory/components/EditSu
 const Jobs = lazy(() => import('@/views/jobs')); 
 const EditJob = lazy(() => import('@/views/jobs/components/EditJob'));
 const AddJob = lazy(() => import('@/views/jobs/components/AddJob'));
+const ViewJob = lazy(() => import('@/views/jobs/components/ViewJob'));
 
 
 
@@ -276,16 +277,20 @@ const categoryRoutes = [
 
 //job routes
 const jobRoutes=[{
-   path: '/admin/Jobs',
+   path: '/admin/jobs',
     element: <Jobs/>,
 },{
-   path: '/admin/Jobs/add',
+   path: '/admin/jobs/add',
     element: <AddJob/>,
 },
 {
-   path: '/admin/Jobs/edit/:id',
+   path: '/admin/jobs/edit/:id',
     element: <EditJob/>,
 },
+{
+  path:'/admin/jobs/view/:id',
+  element:<ViewJob/>
+}
 ];
 
 // admin routes wrapped in main layout + protected route

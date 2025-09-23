@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Container, Row, Col, Dropdown } from "react-bootstrap";
+import React, { useEffect, useState, useRef } from "react";
+import { Container, Row, Col, Dropdown, Alert } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { createRoot } from "react-dom/client";
 import axios from "axios";
@@ -8,7 +8,10 @@ import TableList from "@/components/table/TableList";
 
 const JobList = () => {
   const [jobs, setJobs] = useState([]);
+  const [message, setMessage] = useState('');
+  const [variant, setVariant] = useState('success');
   const navigate = useNavigate();
+  const tableRef = useRef(null);
 
   // Fetch all jobs
   const fetchJobs = async () => {
@@ -18,6 +21,8 @@ const JobList = () => {
     } catch (err) {
       console.error("Fetch jobs error:", err);
       setJobs([]);
+      setMessage("Failed to fetch jobs.");
+      setVariant("danger");
     }
   };
 
@@ -30,10 +35,13 @@ const JobList = () => {
     if (!window.confirm("Are you sure you want to delete this job?")) return;
     try {
       await axios.delete(`${import.meta.env.VITE_BASE_URL}/api/jobs/${id}`);
+      setMessage("Job deleted successfully.");
+      setVariant("success");
       fetchJobs(); // Refresh table
     } catch (err) {
       console.error(err);
-      alert("Failed to delete job");
+      setMessage(err.response?.data?.message || "Failed to delete job.");
+      setVariant("danger");
     }
   };
 
@@ -41,26 +49,24 @@ const JobList = () => {
   const columns = [
     { title: "Sector", data: "sector" },
     { title: "Department", data: "department" },
-    { title: "Post Name", data: "postName" },
+    { title: "Post", data: "postName" },
     { title: "Vacancies", data: "totalVacancies" },
     {
       title: "Age Limit",
       data: "ageLimit",
       render: (cellData) =>
-        cellData
-          ? `${cellData.min}-${cellData.max} (as on ${cellData.referenceDate})`
-          : "N/A",
+        cellData ? `${cellData.min}-${cellData.max}` : "N/A",
     },
     { title: "Qualification", data: "qualification" },
     {
-      title: "Category Reservation",
+      title: "Reservation",
       data: "categoryReservation",
       render: (cellData) =>
         cellData?.length ? cellData.join(", ") : "N/A",
     },
-    { title: "Job Location", data: "jobLocation" },
+    { title: "Location", data: "jobLocation" },
     {
-      title: "Selection Process",
+      title: "Process",
       data: "selectionProcess",
       render: (cellData) =>
         cellData?.length ? cellData.join(" → ") : "N/A",
@@ -86,6 +92,12 @@ const JobList = () => {
                 <TbEdit className="me-1" /> Edit
               </Dropdown.Item>
               <Dropdown.Item
+                className="text-secondary"
+                onClick={() => navigate(`/admin/jobs/view/${rowData._id}`, { state: rowData })}
+              >
+                <TbTrash className="me-1" /> View
+              </Dropdown.Item>
+              <Dropdown.Item
                 className="text-danger"
                 onClick={() => handleDelete(rowData._id)}
               >
@@ -102,14 +114,27 @@ const JobList = () => {
     <Container fluid>
       <Row>
         <Col>
+          {message && <Alert variant={variant}>{message}</Alert>}
+
           <TableList
-            id="jobs-table"
+            ref={tableRef}
             data={jobs}
             columns={columns}
             options={{
               responsive: true,
               pageLength: 10,
               destroy: true, // re-init table when jobs change
+              dom: `<"d-flex justify-content-between mb-2"
+                      <"dt-buttons"B>
+                      <"dataTables_filter"f>
+                    >rtip`,
+              buttons: [
+                { extend: "copyHtml5", className: "btn btn-sm btn-secondary" },
+                { extend: "csvHtml5", className: "btn btn-sm btn-secondary" },
+                { extend: "excelHtml5", className: "btn btn-sm btn-secondary" },
+                { extend: "pdfHtml5", className: "btn btn-sm btn-secondary" },
+              ],
+              searching: true,
             }}
             className="table table-striped dt-responsive w-100"
           />

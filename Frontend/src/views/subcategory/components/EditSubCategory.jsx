@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Form, Button, Alert, Container, Image } from 'react-bootstrap';
 import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
+import ComponentCard from '../../../components/ComponentCard';
 
 const EditSubCategory = () => {
   const navigate = useNavigate();
@@ -96,58 +97,55 @@ const EditSubCategory = () => {
   };
 
   return (
-    <Container fluid className="pt-4">
-      {message && <Alert variant={variant}>{message}</Alert>}
-
-      <Form onSubmit={handleSubmit}>
-        <Form.Group className="mb-3" controlId="subCategoryName">
-          <Form.Label>
-            Sub-Category Name <span className="text-danger">*</span>
-          </Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="Enter sub-category name"
-            value={subCategoryName}
-            onChange={(e) => setSubCategoryName(e.target.value)}
-            required
-          />
-        </Form.Group>
-
-        <Form.Group className="mb-3" controlId="parentCategory">
-          <Form.Label>
-            Parent Category <span className="text-danger">*</span>
-          </Form.Label>
-          <Form.Select
-            value={parentCategory}
-            onChange={(e) => setParentCategory(e.target.value)}
-            required
-          >
-            <option value="">Select parent category</option>
-            {categories.map((cat) => (
-              <option key={cat._id} value={cat._id}>
-                {cat.categoryName}
-              </option>
-            ))}
-          </Form.Select>
-        </Form.Group>
-
-        <Form.Group className="mb-3" controlId="subCategoryImage">
-          <Form.Label>Upload Image</Form.Label>
-          <Form.Control type="file" accept="image/*" onChange={handleImageChange} />
-        </Form.Group>
-
-        {preview && (
-          <div className="mb-3 text-start">
-            <p>Image Preview:</p>
-            <Image src={preview} alt="Preview" thumbnail width="200" />
-          </div>
-        )}
-
-        <Button variant="primary" type="submit" disabled={isSubmitting}>
-          Update Sub-Category
-        </Button>
-      </Form>
-    </Container>
+    <div  className="pt-4">
+      <ComponentCard title="Edit Sub Category">
+        {message && <Alert variant={variant}>{message}</Alert>}
+        <Form onSubmit={handleSubmit}>
+          <Form.Group className="mb-3" controlId="subCategoryName">
+            <Form.Label>
+              Sub-Category Name <span className="text-danger">*</span>
+            </Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="Enter sub-category name"
+              value={subCategoryName}
+              onChange={(e) => setSubCategoryName(e.target.value)}
+              required
+            />
+          </Form.Group>
+          <Form.Group className="mb-3" controlId="parentCategory">
+            <Form.Label>
+              Parent Category <span className="text-danger">*</span>
+            </Form.Label>
+            <Form.Select
+              value={parentCategory}
+              onChange={(e) => setParentCategory(e.target.value)}
+              required
+            >
+              <option value="">Select parent category</option>
+              {categories.map((cat) => (
+                <option key={cat._id} value={cat._id}>
+                  {cat.categoryName}
+                </option>
+              ))}
+            </Form.Select>
+          </Form.Group>
+          <Form.Group className="mb-3" controlId="subCategoryImage">
+            <Form.Label>Upload Image</Form.Label>
+            <Form.Control type="file" accept="image/*" onChange={handleImageChange} />
+          </Form.Group>
+          {preview && (
+            <div className="mb-3 text-start">
+              <p>Image Preview:</p>
+              <Image src={preview} alt="Preview" thumbnail width="200" />
+            </div>
+          )}
+          <Button variant="primary" type="submit" disabled={isSubmitting}>
+            Update Sub-Category
+          </Button>
+        </Form>
+      </ComponentCard>
+    </div>
   );
 };
 

@@ -1,18 +1,18 @@
-import React, { useEffect, useState } from 'react';
-import { Container, Dropdown } from 'react-bootstrap';
+import React, { useEffect, useState, useRef } from 'react';
+import { Container, Row, Col, Dropdown, Alert } from 'react-bootstrap';
 import { createRoot } from 'react-dom/client';
 import { TbDotsVertical, TbEdit, TbTrash } from 'react-icons/tb';
-import {  Row, Col,  DropdownMenu, DropdownItem, DropdownToggle } from "react-bootstrap"
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import DataTable from 'datatables.net-react';
-import DT from 'datatables.net-bs5';
 import TableList from "@/components/table/TableList";
-
+import DT from 'datatables.net-bs5';
 
 const SubCategoryList = () => {
   const [subCategories, setSubCategories] = useState([]);
+  const [message, setMessage] = useState('');
+  const [variant, setVariant] = useState('success');
   const navigate = useNavigate();
+  const tableRef = useRef(null);
 
   // Fetch all sub-categories
   const fetchSubCategories = async () => {
@@ -22,6 +22,8 @@ const SubCategoryList = () => {
     } catch (err) {
       console.error(err);
       setSubCategories([]);
+      setMessage('Failed to fetch sub-categories.');
+      setVariant('danger');
     }
   };
 
@@ -33,10 +35,14 @@ const SubCategoryList = () => {
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this sub-category?')) return;
     try {
-      await axios.delete(`${import.meta.env.VITE_BASE_URL}/api/subcategories/${id}`);
+      const res = await axios.delete(`${import.meta.env.VITE_BASE_URL}/api/subcategories/${id}`);
+      setMessage(res.data.message || 'Sub-category deleted successfully.');
+      setVariant('success');
       fetchSubCategories(); // Refresh list
     } catch (err) {
       console.error(err);
+      setMessage(err.response?.data?.message || 'Failed to delete sub-category.');
+      setVariant('danger');
     }
   };
 
@@ -86,22 +92,37 @@ const SubCategoryList = () => {
   ];
 
   // Initialize DataTable
-  DataTable.use(DT);
+  TableList.use = DT;
 
   return (
-    <Container fluid >
+    <Container fluid>
       <Row>
-          <Col>
-              <TableList
-                data={subCategories}
-                columns={columns}
-                options={{ responsive: true, pageLength: 10 }}
-                className="table table-striped dt-responsive w-100"
-              />
-          </Col>
+        <Col>
+          {message && <Alert variant={variant}>{message}</Alert>}
+
+          <TableList
+            ref={tableRef}
+            data={subCategories}
+            columns={columns}
+            options={{
+              responsive: true,
+              pageLength: 10,
+              dom: `<"d-flex justify-content-between mb-2"
+                      <"dt-buttons"B>
+                      <"dataTables_filter"f>
+                    >rtip`,
+              buttons: [
+                { extend: "copyHtml5", className: "btn btn-sm btn-secondary" },
+                { extend: "csvHtml5", className: "btn btn-sm btn-secondary" },
+                { extend: "excelHtml5", className: "btn btn-sm btn-secondary" },
+                { extend: "pdfHtml5", className: "btn btn-sm btn-secondary" },
+              ],
+              searching: true
+            }}
+            className="table table-striped dt-responsive w-100"
+          />
+        </Col>
       </Row>
-        
-   
     </Container>
   );
 };

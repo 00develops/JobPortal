@@ -74,14 +74,20 @@ const Topbar = () => {
                     <div className="topbar-item d-none d-lg-flex">
                         <Link to="" className="topbar-link btn shadow-none btn-link px-2">
                             {' '}
-                            Components
+                            Home
                         </Link>
                     </div>
-
-                    <div className="topbar-item d-none d-md-flex">
+                    
+                    <div className="topbar-item d-none d-lg-flex">
+                        <Link to="" className="topbar-link btn shadow-none btn-link px-2">
+                            {' '}
+                            Contact
+                        </Link>
+                    </div>
+                    {/* <div className="topbar-item d-none d-md-flex">
                         <Dropdown>
                             <DropdownToggle className="topbar-link btn shadow-none btn-link dropdown-toggle drop-arrow-none px-2">
-                                Dropdown <TbChevronDown className="ms-1" />
+                                Contact <TbChevronDown className="ms-1" />
                             </DropdownToggle>
                             <DropdownMenu>
                                 <DropdownItem>
@@ -95,7 +101,7 @@ const Topbar = () => {
                                 </DropdownItem>
                             </DropdownMenu>
                         </Dropdown>
-                    </div>
+                    </div> */}
 
                     <MegaMenu />
                 </div>

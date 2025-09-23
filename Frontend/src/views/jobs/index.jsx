@@ -1,21 +1,13 @@
 
 import { Link } from "react-router-dom";
 import JobList from './components/JobList';
-
-
-
-import {  Nav, NavItem, NavLink, Row, TabContainer, TabContent, TabPane } from 'react-bootstrap';
-import { TbBriefcase, TbHome, TbInfoCircle, TbMail, TbSettings, TbUser, TbUserCircle } from 'react-icons/tb';
+import {  Nav, NavItem, NavLink, Row, TabContainer,Card, TabContent, TabPane } from 'react-bootstrap';
+import ComponentCard from "../../components/ComponentCard";
 
 const Page = () => {
     return <>
-        <div className="mt-2 pb-3">
-            <div className="d-flex justify-content-between align-items-center mb-3">
-                <h5 className="mb-0">Job List</h5>
-                <Link to="/admin/jobs/add" className="btn btn-sm btn-primary">
-                    + Add Job
-                </Link>
-            </div>
+        <div className="mt-4 pb-3">
+           
 
             <TabContainer defaultActiveKey="Job-List">
                 <Nav className="nav-tabs nav-bordered mb-3">
@@ -26,13 +18,17 @@ const Page = () => {
                     </NavItem>
 
                 </Nav>
-                <TabContent>
+                <ComponentCard title="List"
+                isLink={<Link to="/admin/jobs/add" >
+                    + Add Job
+                </Link>}
+                >
                     <TabPane eventKey="Job-List" >
                         <JobList />
                     </TabPane>
-                </TabContent>
+                </ComponentCard>
             </TabContainer>
-        </div >
+        </div>
     </>;
 };
 export default Page;

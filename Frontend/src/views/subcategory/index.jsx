@@ -8,13 +8,8 @@ import { TbBriefcase, TbHome, TbInfoCircle, TbMail, TbSettings, TbUser, TbUserCi
 
 const Page = () => {
     return <>
-        <div className="mt-2 pb-3">
-            <div className="d-flex justify-content-between align-items-center mb-3">
-                <h5 className="mb-0">Sub Category List</h5>
-                <Link to="/admin/sub-category/add" className="btn btn-sm btn-primary">
-                    + Add Sub Category
-                </Link>
-            </div>
+        <div className="mt-4 pb-3">
+           
 
             <TabContainer defaultActiveKey="Category-List">
                 <Nav className="nav-tabs nav-bordered mb-3">
@@ -25,11 +20,13 @@ const Page = () => {
                     </NavItem>
 
                 </Nav>
-                <TabContent>
+                <ComponentCard title="List"isLink={<Link to="/admin/sub-category/add" >
+                    + Add Sub Category
+                </Link>}>
                     <TabPane eventKey="Category-List" >
                         <SubCategoryList />
                     </TabPane>
-                </TabContent>
+                </ComponentCard>
             </TabContainer>
         </div >
     </>;

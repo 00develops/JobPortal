@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Form, Button, Alert, Container, Image } from 'react-bootstrap';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import ComponentCard from '../../../components/ComponentCard';
 
 const AddCategory = () => {
   const navigate = useNavigate();
@@ -67,42 +68,40 @@ const AddCategory = () => {
 
   return (
     <Container fluid className="pt-4">
-      {message && <Alert variant={variant}>{message}</Alert>}
-
-      <Form onSubmit={handleSubmit}>
-        <Form.Group className="mb-3" controlId="categoryName">
-          <Form.Label>
-            Category Name <span className="text-danger">*</span>
-          </Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="Enter category name"
-            value={categoryName}
-            onChange={(e) => setCategoryName(e.target.value)}
-            required
-          />
-        </Form.Group>
-
-        <Form.Group className="mb-3" controlId="categoryImage">
-          <Form.Label>Upload Image</Form.Label>
-          <Form.Control
-            type="file"
-            accept="image/*"
-            onChange={handleCategoryImageChange}
-          />
-        </Form.Group>
-
-        {preview && (
-          <div className="mb-3 text-start">
-            <p>Image Preview:</p>
-            <Image src={preview} alt="Preview" thumbnail width="200" />
-          </div>
-        )}
-
-        <Button variant="primary" type="submit" disabled={isSubmitting}>
-          Add Category
-        </Button>
-      </Form>
+      <ComponentCard title="Add Category">
+        {message && <Alert variant={variant}>{message}</Alert>}
+        <Form onSubmit={handleSubmit}>
+          <Form.Group className="mb-3" controlId="categoryName">
+            <Form.Label>
+              Category Name <span className="text-danger">*</span>
+            </Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="Enter category name"
+              value={categoryName}
+              onChange={(e) => setCategoryName(e.target.value)}
+              required
+            />
+          </Form.Group>
+          <Form.Group className="mb-3" controlId="categoryImage">
+            <Form.Label>Upload Image</Form.Label>
+            <Form.Control
+              type="file"
+              accept="image/*"
+              onChange={handleCategoryImageChange}
+            />
+          </Form.Group>
+          {preview && (
+            <div className="mb-3 text-start">
+              <p>Image Preview:</p>
+              <Image src={preview} alt="Preview" thumbnail width="200" />
+            </div>
+          )}
+          <Button variant="primary" type="submit" disabled={isSubmitting}>
+            Add Category
+          </Button>
+        </Form>
+      </ComponentCard>
     </Container>
   );
 };
