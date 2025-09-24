@@ -1,26 +1,55 @@
 const mongoose = require("mongoose");
 
-const jobSchema = new mongoose.Schema(
+const ImportantDateSchema = new mongoose.Schema({
+  title: { type: String, required: true, trim: true },
+  date: { type: Date, required: true },
+});
+
+const SectionSchema = new mongoose.Schema({
+  title: { type: String, default: "", trim: true },
+  description: { type: String, default: "" },      // Plain text
+  richDescription: { type: String, default: "" },  // Rich text (HTML)
+});
+
+const MetaDetailsSchema = new mongoose.Schema({
+  title: { type: String, default: "", trim: true },
+  description: { type: String, default: "" },
+  keywords: { type: String, default: "" },
+  schemas: { type: String, default: "" },
+});
+
+const JobSchema = new mongoose.Schema(
   {
-    sector: { type: String, required: true },
-    department: { type: String, required: true },
-    postName: { type: String, required: true },
-    totalVacancies: { type: Number, required: true },
-    ageLimit: {
-      min: { type: Number, required: true },
-      max: { type: Number, required: true },
-      referenceDate: { type: Date, required: true },
-      relaxations: { type: String },
+    // Basic Job Details
+    postName: { type: String, required: true, trim: true },
+    organization: { type: String, required: true, trim: true },
+    advtNumber: { type: String, required: true, trim: true },
+    jobType: { type: String, default: "", trim: true },
+    jobCategory: { type: String, default: "", trim: true },
+    jobLocation: { type: String, default: "", trim: true },
+    payScale: { type: String, default: "", trim: true },
+    applicationStartDate: { type: Date },
+    lastDateToApply: { type: Date },
+
+    // Important Dates
+    importantDates: {
+      type: [ImportantDateSchema],
+      default: [],
     },
-    qualification: { type: String, required: true },
-    finalYearEligible: { type: Boolean, default: false },
-    experienceRequired: { type: Boolean, default: false },
-    genderRestriction: { type: String, enum: ["None", "Male", "Female","Other","All"], default: "None" },
-    categoryReservation: [{ type: String, enum: ["UR", "OBC", "SC", "ST", "EWS"] }],
-    jobLocation: { type: String, required: true },
-    selectionProcess: [{ type: String, enum: ["Tier-I", "Tier-II", "Interview", "DV", "Medical"] }],
+
+    // Sections (plain + rich descriptions)
+    applicationFee: { type: SectionSchema, default: () => ({}) },
+    vacancyDetails: { type: SectionSchema, default: () => ({}) },
+    eligibilityCriteria: { type: SectionSchema, default: () => ({}) },
+    salaryBenefits: { type: SectionSchema, default: () => ({}) },
+    selectionProcess: { type: SectionSchema, default: () => ({}) },
+    importantLinks: { type: SectionSchema, default: () => ({}) },
+    howToApply: { type: SectionSchema, default: () => ({}) },
+
+    // Meta
+    metaDetails: { type: MetaDetailsSchema, default: () => ({}) },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Job", jobSchema);
+module.exports = mongoose.model("Job", JobSchema);

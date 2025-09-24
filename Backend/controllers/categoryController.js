@@ -1,64 +1,146 @@
+const express = require('express');
+const router = express.Router();
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const mongoose = require('mongoose');
 const Category = require('../models/Category');
 
-// @desc    Add new category
-// @route   POST /api/categories
-// @access  Public
-const addCategory = async (req, res) => {
-  try {
-    const { categoryName, categorySKU, categoryStatus } = req.body;
-    const categoryImage = req.file ? `/uploads/${req.file.filename}` : null;
+// Ensure uploads folder exists
+const uploadDir = path.join(__dirname, '../uploads');
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
+// Multer setup
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadDir),
+  filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
+});
+const upload = multer({ storage });
+
+// --------------------------------------------------------
+// POST /api/categories - Add new category
+// --------------------------------------------------------
+router.post('/', upload.single('categoryImage'), async (req, res) => {
+  const { categoryName, categorySKU, categoryStatus } = req.body;
+
+  if (!categoryName) return res.status(400).json({ message: 'Category name is required' });
+
+  try {
     const category = new Category({
       categoryName,
       categorySKU: categorySKU || '',
-      categoryStatus: categoryStatus || 0,
-      categoryImage,
+      categoryStatus: categoryStatus ? Number(categoryStatus) : 0,
+      categoryImage: req.file ? `/uploads/${req.file.filename}` : ''
     });
 
-    await category.save();
-    res.status(201).json(category);
-  } catch (error) {
-    console.error(error);
-    res.status(400).json({ message: error.message });
+    const savedCategory = await category.save();
+    res.status(201).json(savedCategory);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
-};
+});
 
-// @desc    Get all categories
-// @route   GET /api/categories
-// @access  Public
-const getCategories = async (req, res) => {
+// --------------------------------------------------------
+// GET /api/categories - Get all categories with search, filter, sort & pagination
+// --------------------------------------------------------
+router.get('/', async (req, res) => {
   try {
-    const categories = await Category.find().sort({ createdAt: -1 });
-    res.json(categories);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: error.message });
-  }
-};
+    const {
+      search,
+      status,
+      page = 1,
+      limit = 10,
+      sort = 'createdAt',
+      order = 'desc'
+    } = req.query;
 
-// @desc    Update a category
-// @route   PUT /api/categories/:id
-// @access  Public
-const updateCategory = async (req, res) => {
+    const query = {};
+    if (search) query.categoryName = { $regex: search, $options: 'i' };
+    if (status !== undefined) query.categoryStatus = Number(status);
+
+    const skip = (page - 1) * limit;
+
+    const categories = await Category.find(query)
+      .sort({ [sort]: order === 'desc' ? -1 : 1 })
+      .skip(skip)
+      .limit(Number(limit));
+
+    const total = await Category.countDocuments(query);
+
+    res.json({
+      data: categories,
+      total,
+      page: Number(page),
+      totalPages: Math.ceil(total / limit)
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// --------------------------------------------------------
+// GET /api/categories/:id - Get a single category by ID
+// --------------------------------------------------------
+router.get('/:id', async (req, res) => {
   const { id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: 'Invalid category ID' });
+  }
+
   try {
     const category = await Category.findById(id);
-    if (!category) {
-      return res.status(404).json({ message: 'Category not found' });
-    }
+    if (!category) return res.status(404).json({ message: 'Category not found' });
+    res.json(category);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 
-    // Update fields if provided
-    if (req.body.categoryName) category.categoryName = req.body.categoryName;
-    if (req.body.categorySKU !== undefined) category.categorySKU = req.body.categorySKU;
-    if (req.body.categoryStatus !== undefined) category.categoryStatus = req.body.categoryStatus;
+// --------------------------------------------------------
+// PUT /api/categories/:id - Update existing category
+// --------------------------------------------------------
+router.put('/:id', upload.single('categoryImage'), async (req, res) => {
+  const { id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: 'Invalid category ID' });
+  }
+
+  const { categoryName, categorySKU, categoryStatus } = req.body;
+
+  try {
+    const category = await Category.findById(id);
+    if (!category) return res.status(404).json({ message: 'Category not found' });
+
+    if (categoryName) category.categoryName = categoryName;
+    if (categorySKU !== undefined) category.categorySKU = categorySKU;
+    if (categoryStatus !== undefined) category.categoryStatus = Number(categoryStatus);
     if (req.file) category.categoryImage = `/uploads/${req.file.filename}`;
 
     const updatedCategory = await category.save();
     res.json(updatedCategory);
-  } catch (error) {
-    console.error(error);
-    res.status(400).json({ message: error.message });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
-};
+});
 
-module.exports = { addCategory, getCategories, updateCategory };
+// --------------------------------------------------------
+// DELETE /api/categories/:id - Delete category
+// --------------------------------------------------------
+router.delete('/:id', async (req, res) => {
+  const { id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: 'Invalid category ID' });
+  }
+
+  try {
+    const category = await Category.findById(id);
+    if (!category) return res.status(404).json({ message: 'Category not found' });
+
+    await category.deleteOne();
+    res.json({ message: 'Category deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+module.exports = router;

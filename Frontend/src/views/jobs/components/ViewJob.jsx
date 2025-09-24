@@ -20,11 +20,25 @@ const ViewJob = () => {
         let data = jobDataFromState;
         if (!data) {
           const jobId = window.location.pathname.split("/").pop();
-          const res = await axios.get(
-            `${import.meta.env.VITE_BASE_URL}/api/jobs/${jobId}`
-          );
+          const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/jobs/${jobId}`);
           data = res.data;
         }
+
+        // Ensure all sections exist with both descriptions
+        [
+          "applicationFee",
+          "vacancyDetails",
+          "eligibilityCriteria",
+          "salaryBenefits",
+          "selectionProcess",
+          "importantLinks",
+          "howToApply",
+        ].forEach((key) => {
+          if (!data[key]) data[key] = { title: "", description: "", richDescription: "" };
+          if (!data[key].description) data[key].description = "";
+          if (!data[key].richDescription) data[key].richDescription = "";
+        });
+
         setJob(data);
       } catch (err) {
         console.error(err);
@@ -34,107 +48,102 @@ const ViewJob = () => {
         setLoading(false);
       }
     };
-
     fetchJob();
   }, [jobDataFromState]);
 
   if (loading) return <Spinner animation="border" className="m-4" />;
 
-  if (!job) return <Alert variant={variant}>{message || "Job not found."}</Alert>;
+  if (!job)
+    return <Alert variant={variant}>{message || "Job not found."}</Alert>;
 
-  const Field = ({ label, value }) => (
+  const Field = ({ label, value, isHtml }) => (
     <div className="mb-3">
       <strong>{label}:</strong>{" "}
-      <span className="text-muted">{value || "N/A"}</span>
+      {isHtml ? (
+        <div className="text-muted" dangerouslySetInnerHTML={{ __html: value || "N/A" }} />
+      ) : (
+        <span className="text-muted">{value || "N/A"}</span>
+      )}
     </div>
+  );
+
+  const RenderSection = ({ title, section }) => (
+    <ComponentCard title={title} className="mb-3">
+      <Row>
+        <Col md={12}>
+          <Field label="Title" value={section?.title} />
+          <Field label="Plain Description" value={section?.description} />
+          <Field label="Rich Description" value={section?.richDescription} isHtml />
+        </Col>
+      </Row>
+    </ComponentCard>
   );
 
   return (
     <div className="pt-4">
-      <ComponentCard title="Job Details">
+      <ComponentCard title="Job Details" className="mb-4">
+        {/* Basic Job Details */}
         <Row>
-          <Col md={4}>
-            <Field label="Sector" value={job.sector} />
-          </Col>
-          <Col md={4}>
-            <Field label="Department" value={job.department} />
-          </Col>
-          <Col md={4}>
-            <Field label="Post Name" value={job.postName} />
-          </Col>
+          <Col md={4}><Field label="Job Title / Post Name" value={job.postName} /></Col>
+          <Col md={4}><Field label="Organization / Department" value={job.organization} /></Col>
+          <Col md={4}><Field label="Advt. Number / Reference ID" value={job.advtNumber} /></Col>
         </Row>
 
         <Row>
-          <Col md={4}>
-            <Field label="Total Vacancies" value={job.totalVacancies} />
-          </Col>
-          <Col md={4}>
-            <Field
-              label="Age Limit"
-              value={
-                job.ageLimit
-                  ? `${job.ageLimit.min}–${job.ageLimit.max} (as on ${job.ageLimit.referenceDate})`
-                  : "N/A"
-              }
-            />
-          </Col>
-          <Col md={4}>
-            <Field
-              label="Relaxations"
-              value={job.ageLimit?.relaxations || "As per govt rules"}
-            />
-          </Col>
+          <Col md={4}><Field label="Job Type" value={job.jobType} /></Col>
+          <Col md={4}><Field label="Job Category" value={job.jobCategory} /></Col>
+          <Col md={4}><Field label="Job Location" value={job.jobLocation} /></Col>
         </Row>
 
         <Row>
-          <Col md={4}>
-            <Field label="Qualification" value={job.qualification} />
-          </Col>
-          <Col md={4}>
-            <Field
-              label="Final Year Eligible"
-              value={job.finalYearEligible ? "Yes" : "No"}
-            />
-          </Col>
-          <Col md={4}>
-            <Field
-              label="Experience Required"
-              value={job.experienceRequired ? "Yes" : "No"}
-            />
-          </Col>
+          <Col md={4}><Field label="Pay Scale / Salary" value={job.payScale} /></Col>
+          <Col md={4}><Field label="Application Start Date" value={job.applicationStartDate?.split("T")[0]} /></Col>
+          <Col md={4}><Field label="Last Date to Apply" value={job.lastDateToApply?.split("T")[0]} /></Col>
         </Row>
 
-        <Row>
-          <Col md={4}>
-            <Field label="Gender Restriction" value={job.genderRestriction} />
-          </Col>
-          <Col md={4}>
-            <Field
-              label="Category Reservation"
-              value={
-                job.categoryReservation?.length
-                  ? job.categoryReservation.join(", ")
-                  : "N/A"
-              }
-            />
-          </Col>
-          <Col md={4}>
-            <Field label="Job Location" value={job.jobLocation} />
-          </Col>
-        </Row>
+        {/* Important Dates */}
+        {job.importantDates?.length > 0 && (
+          <ComponentCard title="Important Dates" className="mb-3">
+            {job.importantDates.map((item, idx) => (
+              <Row key={idx}>
+                <Col md={6}><Field label="Title" value={item.title} /></Col>
+                <Col md={6}><Field label="Date" value={item.date} /></Col>
+              </Row>
+            ))}
+          </ComponentCard>
+        )}
 
-        <Row>
-          <Col md={12}>
-            <Field
-              label="Mode of Selection"
-              value={
-                job.selectionProcess?.length
-                  ? job.selectionProcess.join(" → ")
-                  : "N/A"
-              }
-            />
-          </Col>
-        </Row>
+        {/* Sections with Plain + Rich Text */}
+        {[
+          { key: "applicationFee", label: "Application Fee" },
+          { key: "vacancyDetails", label: "Vacancy Details" },
+          { key: "eligibilityCriteria", label: "Eligibility Criteria" },
+          { key: "salaryBenefits", label: "Salary & Benefits" },
+          { key: "selectionProcess", label: "Selection Process" },
+          { key: "importantLinks", label: "Important Links" },
+          { key: "howToApply", label: "How to Apply" },
+        ].map(
+          (section) =>
+            job[section.key] && (
+              <RenderSection
+                key={section.key}
+                title={section.label}
+                section={job[section.key]}
+              />
+            )
+        )}
+
+        {/* Meta Details */}
+        {job.metaDetails && (
+          <ComponentCard title="Meta Details" className="mb-3">
+            <Row>
+              <Col md={3}><Field label="Title" value={job.metaDetails.title} /></Col>
+              <Col md={3}><Field label="Keywords" value={job.metaDetails.keywords} /></Col>
+              <Col md={3}><Field label="Description" value={job.metaDetails.description} isHtml /></Col>
+              <Col md={3}><Field label="Schemas" value={job.metaDetails.schemas} /></Col>
+            </Row>
+          </ComponentCard>
+        )}
 
         {/* Go Back Button */}
         <div className="text-start mt-4">

@@ -3,13 +3,13 @@ import { Container, Row, Col, Dropdown, Alert } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { createRoot } from "react-dom/client";
 import axios from "axios";
-import { TbDotsVertical, TbEdit, TbTrash } from "react-icons/tb";
+import { TbDotsVertical, TbEdit, TbEye, TbTrash } from "react-icons/tb";
 import TableList from "@/components/table/TableList";
 
 const JobList = () => {
   const [jobs, setJobs] = useState([]);
-  const [message, setMessage] = useState('');
-  const [variant, setVariant] = useState('success');
+  const [message, setMessage] = useState("");
+  const [variant, setVariant] = useState("success");
   const navigate = useNavigate();
   const tableRef = useRef(null);
 
@@ -37,7 +37,7 @@ const JobList = () => {
       await axios.delete(`${import.meta.env.VITE_BASE_URL}/api/jobs/${id}`);
       setMessage("Job deleted successfully.");
       setVariant("success");
-      fetchJobs(); // Refresh table
+      setJobs((prev) => prev.filter((job) => job._id !== id)); // remove locally
     } catch (err) {
       console.error(err);
       setMessage(err.response?.data?.message || "Failed to delete job.");
@@ -45,37 +45,20 @@ const JobList = () => {
     }
   };
 
-  // Define DataTable columns
+  // Define DataTable columns (Basic Job Details only)
   const columns = [
-    { title: "Sector", data: "sector" },
-    { title: "Department", data: "department" },
-    { title: "Post", data: "postName" },
-    { title: "Vacancies", data: "totalVacancies" },
-    {
-      title: "Age Limit",
-      data: "ageLimit",
-      render: (cellData) =>
-        cellData ? `${cellData.min}-${cellData.max}` : "N/A",
-    },
-    { title: "Qualification", data: "qualification" },
-    {
-      title: "Reservation",
-      data: "categoryReservation",
-      render: (cellData) =>
-        cellData?.length ? cellData.join(", ") : "N/A",
-    },
-    { title: "Location", data: "jobLocation" },
-    {
-      title: "Process",
-      data: "selectionProcess",
-      render: (cellData) =>
-        cellData?.length ? cellData.join(" → ") : "N/A",
-    },
+    { title: "Post Name", data: "postName" },
+    { title: "Organization / Department", data: "organization" },
+    { title: "Job Type", data: "jobType" },
+    { title: "Job Category", data: "jobCategory" },
+    { title: "Job Location", data: "jobLocation" },
+    { title: "Pay Scale", data: "payScale" },
     {
       title: "Actions",
       data: null,
       orderable: false,
       createdCell: (td, cellData, rowData) => {
+        // Clear previous content
         td.innerHTML = "";
         const root = createRoot(td);
         root.render(
@@ -86,16 +69,17 @@ const JobList = () => {
             <Dropdown.Menu>
               <Dropdown.Item
                 onClick={() =>
+                  navigate(`/admin/jobs/view/${rowData._id}`, { state: rowData })
+                }
+              >
+                <TbEye className="me-1" /> View
+              </Dropdown.Item>
+              <Dropdown.Item
+                onClick={() =>
                   navigate(`/admin/jobs/edit/${rowData._id}`, { state: rowData })
                 }
               >
                 <TbEdit className="me-1" /> Edit
-              </Dropdown.Item>
-              <Dropdown.Item
-                className="text-secondary"
-                onClick={() => navigate(`/admin/jobs/view/${rowData._id}`, { state: rowData })}
-              >
-                <TbTrash className="me-1" /> View
               </Dropdown.Item>
               <Dropdown.Item
                 className="text-danger"
@@ -124,10 +108,10 @@ const JobList = () => {
               responsive: true,
               pageLength: 10,
               destroy: true, // re-init table when jobs change
-              dom: `<"d-flex justify-content-between mb-2"
-                      <"dt-buttons"B>
-                      <"dataTables_filter"f>
-                    >rtip`,
+              dom:
+                "<'d-md-flex justify-content-between align-items-center my-2'<'dropdown'B>f>" +
+                "rt" +
+                "<'d-md-flex justify-content-between align-items-center mt-2'ip>",
               buttons: [
                 { extend: "copyHtml5", className: "btn btn-sm btn-secondary" },
                 { extend: "csvHtml5", className: "btn btn-sm btn-secondary" },

@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Container, Row, Col, Dropdown, Alert } from "react-bootstrap";
+import { Container, Row, Col, Dropdown, Alert, Spinner } from "react-bootstrap";
 import TableList from "@/components/table/TableList";
 import { createRoot } from "react-dom/client";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import ReactDOMServer from "react-dom/server";
+
 import {
   TbDotsVertical,
   TbEdit,
@@ -12,7 +13,7 @@ import {
   TbChevronLeft,
   TbChevronRight,
   TbChevronsLeft,
-  TbChevronsRight
+  TbChevronsRight,
 } from "react-icons/tb";
 
 const CategoryList = () => {
@@ -23,12 +24,16 @@ const CategoryList = () => {
   const navigate = useNavigate();
   const tableRef = useRef(null);
 
+  const BASE_URL = import.meta.env.VITE_BASE_URL;
+
   // Fetch categories
   const fetchCategories = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/categories`);
-      setCategories(res.data || []);
+      const res = await axios.get(`${BASE_URL}/api/categories`);
+      // Ensure we get an array
+      const data = Array.isArray(res.data) ? res.data : res.data.data || [];
+      setCategories(data);
     } catch (err) {
       console.error(err);
       setCategories([]);
@@ -49,7 +54,7 @@ const CategoryList = () => {
     if (!window.confirm("Are you sure you want to delete this category?")) return;
 
     try {
-      const res = await axios.delete(`${import.meta.env.VITE_BASE_URL}/api/categories/${id}`);
+      const res = await axios.delete(`${BASE_URL}/api/categories/${id}`);
       setMessage(res.data.message || "Category deleted successfully");
       setVariant("success");
       fetchCategories(); // Refresh after delete
@@ -76,7 +81,7 @@ const CategoryList = () => {
       orderable: false,
       createdCell: (td, cellData) => {
         td.innerHTML = cellData
-          ? `<img src="${import.meta.env.VITE_BASE_URL}${cellData}" alt="img" width="50"/>`
+          ? `<img src="${BASE_URL}${cellData}" alt="img" width="50" />`
           : "";
       },
     },
@@ -100,10 +105,7 @@ const CategoryList = () => {
               >
                 <TbEdit className="me-1" /> Edit
               </Dropdown.Item>
-              <Dropdown.Item
-                className="text-danger"
-                onClick={() => handleDelete(rowData._id)}
-              >
+              <Dropdown.Item className="text-danger" onClick={() => handleDelete(rowData._id)}>
                 <TbTrash className="me-1" /> Delete
               </Dropdown.Item>
             </Dropdown.Menu>
@@ -113,54 +115,48 @@ const CategoryList = () => {
     },
   ];
 
-  
-
   return (
-    <Container fluid>
-      <Row>
-        <Col>
-          {message && <Alert variant={variant}>{message}</Alert>}
+    <Container fluid className="pt-4">
+      {message && <Alert variant={variant}>{message}</Alert>}
 
-          <TableList
-            ref={tableRef}
-            data={categories}
-            columns={columns}
-            options={{
-              responsive: true,
-              dom: `<"d-flex justify-content-between mb-2"
-                      <"dt-buttons"B>
-                      <"dataTables_filter"f>
-                    >rtip`,
-              buttons: [
-                { extend: "copyHtml5", className: "btn btn-sm btn-secondary" },
-                { extend: "csvHtml5", className: "btn btn-sm btn-secondary" },
-                { extend: "excelHtml5", className: "btn btn-sm btn-secondary" },
-                { extend: "pdfHtml5", className: "btn btn-sm btn-secondary" },
-              ],
-              paging: true,
-              pageLength: 10,
-              searching: true,
-              language: {
-                paginate: {
-                  first: ReactDOMServer.renderToStaticMarkup(
-                    <TbChevronsLeft className="fs-lg" />
-                  ),
-                  previous: ReactDOMServer.renderToStaticMarkup(
-                    <TbChevronLeft className="fs-lg" />
-                  ),
-                  next: ReactDOMServer.renderToStaticMarkup(
-                    <TbChevronRight className="fs-lg" />
-                  ),
-                  last: ReactDOMServer.renderToStaticMarkup(
-                    <TbChevronsRight className="fs-lg" />
-                  ),
+      {loading ? (
+        <div className="text-center py-4">
+          <Spinner animation="border" />
+        </div>
+      ) : (
+        <Row>
+          <Col>
+            <TableList
+              ref={tableRef}
+              data={categories}
+              columns={columns}
+              options={{
+                responsive: true,
+                dom:
+                  "<'d-md-flex justify-content-between align-items-center my-2'<'dt-buttons'B>f>" +
+                  "rt" +
+                  "<'d-md-flex justify-content-between align-items-center mt-2'ip>",
+                buttons: [
+                  { extend: "copyHtml5", className: "btn btn-sm btn-secondary" },
+                  { extend: "csvHtml5", className: "btn btn-sm btn-secondary" },
+                  { extend: "excelHtml5", className: "btn btn-sm btn-secondary" },
+                  { extend: "pdfHtml5", className: "btn btn-sm btn-secondary" },
+                ],
+                paging: true,
+                language: {
+                  paginate: {
+                    first: ReactDOMServer.renderToStaticMarkup(<TbChevronsLeft />),
+                    previous: ReactDOMServer.renderToStaticMarkup(<TbChevronLeft />),
+                    next: ReactDOMServer.renderToStaticMarkup(<TbChevronRight />),
+                    last: ReactDOMServer.renderToStaticMarkup(<TbChevronsRight />),
+                  },
                 },
-              },
-            }}
-            className="table table-striped dt-responsive w-100"
-          />
-        </Col>
-      </Row>
+              }}
+              className="table table-striped dt-responsive w-100"
+            />
+          </Col>
+        </Row>
+      )}
     </Container>
   );
 };

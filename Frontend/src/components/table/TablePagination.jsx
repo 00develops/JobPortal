@@ -15,7 +15,7 @@ const TablePagination = ({
   nextPage,
   canNextPage
 }) => {
-  return <Row className={clsx('align-items-center text-center text-sm-start', showInfo ? 'justify-content-between' : 'justify-content-end')}>
+  return <Row className={clsx(' align-items-center text-center text-sm-start', showInfo ? 'justify-content-between' : 'justify-content-end')}>
             {showInfo && <Col sm>
                     <div className="text-muted">
                         Showing <span className="fw-semibold">{start}</span> to <span className="fw-semibold">{end}</span> of{' '}

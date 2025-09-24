@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Button, Alert, Container, Image } from 'react-bootstrap';
+import { Form, Button, Alert, Container, Image, Spinner } from 'react-bootstrap';
 import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
 import ComponentCard from '../../../components/ComponentCard';
@@ -16,6 +16,8 @@ const EditSubCategory = () => {
   const [message, setMessage] = useState('');
   const [variant, setVariant] = useState('success');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+  const [loadingSubCategory, setLoadingSubCategory] = useState(true);
 
   const BASE_URL = import.meta.env.VITE_BASE_URL;
 
@@ -24,11 +26,13 @@ const EditSubCategory = () => {
     const fetchCategories = async () => {
       try {
         const res = await axios.get(`${BASE_URL}/api/categories`);
-        setCategories(res.data || []);
+        setCategories(res.data.data || []); // <-- fix: ensure array
       } catch (err) {
         console.error(err);
-        setMessage('Failed to load categories');
+        setMessage('Failed to load categories.');
         setVariant('danger');
+      } finally {
+        setLoadingCategories(false);
       }
     };
     fetchCategories();
@@ -50,12 +54,13 @@ const EditSubCategory = () => {
         console.error(err);
         setMessage('Failed to load sub-category');
         setVariant('danger');
+      } finally {
+        setLoadingSubCategory(false);
       }
     };
     fetchSubCategory();
   }, [id]);
 
-  // Handle image selection
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -66,7 +71,6 @@ const EditSubCategory = () => {
     }
   };
 
-  // Handle form submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!subCategoryName.trim() || !parentCategory) {
@@ -96,8 +100,16 @@ const EditSubCategory = () => {
     }
   };
 
+  if (loadingCategories || loadingSubCategory) {
+    return (
+      <Container className="pt-4 text-center">
+        <Spinner animation="border" />
+      </Container>
+    );
+  }
+
   return (
-    <div  className="pt-4">
+    <Container fluid className="pt-4">
       <ComponentCard title="Edit Sub Category">
         {message && <Alert variant={variant}>{message}</Alert>}
         <Form onSubmit={handleSubmit}>
@@ -113,6 +125,7 @@ const EditSubCategory = () => {
               required
             />
           </Form.Group>
+
           <Form.Group className="mb-3" controlId="parentCategory">
             <Form.Label>
               Parent Category <span className="text-danger">*</span>
@@ -123,29 +136,39 @@ const EditSubCategory = () => {
               required
             >
               <option value="">Select parent category</option>
-              {categories.map((cat) => (
-                <option key={cat._id} value={cat._id}>
-                  {cat.categoryName}
-                </option>
-              ))}
+              {Array.isArray(categories) &&
+                categories.map((cat) => (
+                  <option key={cat._id} value={cat._id}>
+                    {cat.categoryName}
+                  </option>
+                ))}
             </Form.Select>
           </Form.Group>
+
           <Form.Group className="mb-3" controlId="subCategoryImage">
             <Form.Label>Upload Image</Form.Label>
             <Form.Control type="file" accept="image/*" onChange={handleImageChange} />
           </Form.Group>
+
           {preview && (
             <div className="mb-3 text-start">
               <p>Image Preview:</p>
               <Image src={preview} alt="Preview" thumbnail width="200" />
             </div>
           )}
+
           <Button variant="primary" type="submit" disabled={isSubmitting}>
-            Update Sub-Category
+            {isSubmitting ? (
+              <>
+                <Spinner animation="border" size="sm" /> Updating...
+              </>
+            ) : (
+              'Update Sub-Category'
+            )}
           </Button>
         </Form>
       </ComponentCard>
-    </div>
+    </Container>
   );
 };
 

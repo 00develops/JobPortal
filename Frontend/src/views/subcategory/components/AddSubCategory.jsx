@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Button, Alert, Container, Image } from 'react-bootstrap';
+import { Form, Button, Alert, Container, Image, Spinner } from 'react-bootstrap';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import ComponentCard from '../../../components/ComponentCard';
@@ -15,15 +15,20 @@ const AddSubCategory = () => {
   const [message, setMessage] = useState('');
   const [variant, setVariant] = useState('success');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loadingCategories, setLoadingCategories] = useState(true);
 
   // Fetch all categories for the parent dropdown
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/categories`);
-        setCategories(res.data || []);
+        setCategories(res.data.data || []); // <-- fix: use data array from API response
       } catch (err) {
         console.error(err);
+        setMessage('Failed to load categories.');
+        setVariant('danger');
+      } finally {
+        setLoadingCategories(false);
       }
     };
     fetchCategories();
@@ -100,23 +105,32 @@ const AddSubCategory = () => {
               required
             />
           </Form.Group>
+
           <Form.Group className="mb-3" controlId="parentCategory">
             <Form.Label>
               Parent Category <span className="text-danger">*</span>
             </Form.Label>
-            <Form.Select
-              value={parentCategory}
-              onChange={(e) => setParentCategory(e.target.value)}
-              required
-            >
-              <option value="">Select parent category</option>
-              {categories.map((cat) => (
-                <option key={cat._id} value={cat._id}>
-                  {cat.categoryName}
-                </option>
-              ))}
-            </Form.Select>
+            {loadingCategories ? (
+              <div>
+                <Spinner animation="border" size="sm" /> Loading categories...
+              </div>
+            ) : (
+              <Form.Select
+                value={parentCategory}
+                onChange={(e) => setParentCategory(e.target.value)}
+                required
+              >
+                <option value="">Select parent category</option>
+                {Array.isArray(categories) &&
+                  categories.map((cat) => (
+                    <option key={cat._id} value={cat._id}>
+                      {cat.categoryName}
+                    </option>
+                  ))}
+              </Form.Select>
+            )}
           </Form.Group>
+
           <Form.Group className="mb-3" controlId="subCategoryImage">
             <Form.Label>Upload Image</Form.Label>
             <Form.Control
@@ -125,14 +139,22 @@ const AddSubCategory = () => {
               onChange={handleSubCategoryImageChange}
             />
           </Form.Group>
+
           {preview && (
             <div className="mb-3 text-start">
               <p>Image Preview:</p>
               <Image src={preview} alt="Preview" thumbnail width="200" />
             </div>
           )}
-          <Button variant="primary" type="submit" disabled={isSubmitting}>
-            Add Sub-Category
+
+          <Button variant="primary" type="submit" disabled={isSubmitting || loadingCategories}>
+            {isSubmitting ? (
+              <>
+                <Spinner animation="border" size="sm" /> Adding...
+              </>
+            ) : (
+              'Add Sub-Category'
+            )}
           </Button>
         </Form>
       </ComponentCard>

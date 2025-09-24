@@ -18,7 +18,7 @@ const Page = () => {
                     </NavItem>
 
                 </Nav>
-                <ComponentCard title="List"
+                <ComponentCard className="pb-2" title="List"
                 isLink={<Link to="/admin/jobs/add" >
                     + Add Job
                 </Link>}

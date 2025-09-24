@@ -16,7 +16,10 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// POST /api/categories - Add new category
+/**
+ * @route POST /api/categories
+ * @desc Add new category
+ */
 router.post('/', upload.single('categoryImage'), async (req, res) => {
   const { categoryName, categorySKU, categoryStatus } = req.body;
 
@@ -39,17 +42,67 @@ router.post('/', upload.single('categoryImage'), async (req, res) => {
   }
 });
 
-// GET /api/categories - Get all categories
+/**
+ * @route GET /api/categories
+ * @desc Get all categories with search, filter, sort & pagination
+ */
 router.get('/', async (req, res) => {
   try {
-    const categories = await Category.find();
-    res.json(categories);
+    const {
+      search,
+      status,
+      page = 1,
+      limit = 10,
+      sort = 'createdAt',
+      order = 'desc'
+    } = req.query;
+
+    const query = {};
+    if (search) {
+      query.categoryName = { $regex: search, $options: 'i' };
+    }
+    if (status !== undefined) {
+      query.categoryStatus = Number(status);
+    }
+
+    const skip = (page - 1) * limit;
+
+    const categories = await Category.find(query)
+      .sort({ [sort]: order === 'desc' ? -1 : 1 })
+      .skip(skip)
+      .limit(Number(limit));
+
+    const total = await Category.countDocuments(query);
+
+    res.json({
+      data: categories,
+      total,
+      page: Number(page),
+      totalPages: Math.ceil(total / limit)
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
-// PUT /api/categories/:id - Update existing category
+/**
+ * @route GET /api/categories/:id
+ * @desc Get a single category by ID
+ */
+router.get('/:id', async (req, res) => {
+  try {
+    const category = await Category.findById(req.params.id);
+    if (!category) return res.status(404).json({ message: 'Category not found' });
+    res.json(category);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+/**
+ * @route PUT /api/categories/:id
+ * @desc Update existing category
+ */
 router.put('/:id', upload.single('categoryImage'), async (req, res) => {
   const { id } = req.params;
   const { categoryName, categorySKU, categoryStatus } = req.body;
@@ -70,40 +123,20 @@ router.put('/:id', upload.single('categoryImage'), async (req, res) => {
   }
 });
 
-// router.delete('/:id', async (req, res) => {
-//   const { id } = req.params;
-//   console.log('Delete request ID:', id); // Debug log
-
-//   try {
-//     // Validate ObjectId format
-//     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
-//       return res.status(400).json({ message: 'Invalid category ID' });
-//     }
-
-//     const category = await Category.findById(id);
-//     if (!category) {
-//       return res.status(404).json({ message: 'Category not found' });
-//     }
-
-//     await category.deleteOne();
-//     res.json({ message: 'Category deleted successfully' });
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ message: err.message });
-//   }
-// });
+/**
+ * @route DELETE /api/categories/:id
+ * @desc Delete category
+ */
 router.delete('/:id', async (req, res) => {
-  console.log("DELETE ID:", req.params.id);
   try {
     const category = await Category.findById(req.params.id);
     if (!category) return res.status(404).json({ message: 'Category not found' });
-    
+
     await category.deleteOne();
     res.json({ message: 'Category deleted successfully' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
-
 
 module.exports = router;

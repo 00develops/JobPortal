@@ -1,5 +1,5 @@
+import { useMemo, useState, useEffect, lazy, useRef } from "react";
 import Quill from "quill";
-import { lazy } from "react";
 import ReactDOMServer from "react-dom/server";
 import {
   TbAlignCenter, TbAlignJustified, TbAlignLeft, TbAlignRight,
@@ -9,17 +9,15 @@ import {
   TbTrash, TbUnderline, TbVideo, TbTable
 } from "react-icons/tb";
 
-// Import quill table module
-import Table from "quill-table-ui";
-import "quill-table-ui/dist/index.css";
+// Lazy load react-quill-new
+const CustomQuill = lazy(() => import("react-quill-new"));
 
-// Register table module
-Quill.register(
-  {
-    "modules/table": Table,
-  },
-  true
-);
+// quill-better-table imports
+import QuillBetterTable from "quill-better-table";
+import "quill-better-table/dist/quill-better-table.css";
+
+// Register better-table module
+Quill.register({ "modules/better-table": QuillBetterTable }, true);
 
 // Custom icons
 const icons = Quill.import("ui/icons");
@@ -51,38 +49,76 @@ icons["header"]["3"] = ReactDOMServer.renderToStaticMarkup(<TbH3 className="fs-l
 icons["header"][""] = ReactDOMServer.renderToStaticMarkup(<TbLetterT className="fs-lg" />);
 icons["table"] = ReactDOMServer.renderToStaticMarkup(<TbTable className="fs-lg" />);
 
-// Toolbar configuration
-const toolbarOptions = [
-  ["bold", "italic", "underline", "strike"],
-  [{ script: "sub" }, { script: "super" }],
-  ["blockquote", "code-block"],
+const SnowEditor = ({ initialValue = "", onChange }) => {
+  const [value, setValue] = useState(initialValue);
+  const quillRef = useRef(null);
 
-  [{ header: [1, 2, 3, false] }],
+  useEffect(() => {
+    setValue(initialValue);
+  }, [initialValue]);
 
-  [{ list: "ordered" }, { list: "bullet" }],
-  [{ indent: "-1" }, { indent: "+1" }],
+  const modules = useMemo(
+    () => ({
+      toolbar: {
+        container: [
+          [{ font: [] }, { header: [false, 1, 2, 3, 4, 5, 6] }],
+          ["bold", "italic", "underline", "strike"],
+          [{ color: [] }, { background: [] }],
+          [{ script: "super" }, { script: "sub" }],
+          ["blockquote", "code-block"],
+          [{ list: "ordered" }, { list: "bullet" }, { indent: "-1" }, { indent: "+1" }],
+          [{ align: [] }],
+          ["link", "image", "video", "table"],
+          ["clean"],
+        ],
+        handlers: {
+          table: function () {
+            const quill = quillRef.current?.getEditor?.();
+            if (quill) {
+              const tableModule = quill.getModule("better-table");
+              tableModule.insertTable(3, 3);
+            }
+          },
+        },
+      },
+      "better-table": {
+        operationMenu: {
+          items: {
+            insertRowAbove: true,
+            insertRowBelow: true,
+            insertColumnLeft: true,
+            insertColumnRight: true,
+            deleteRow: true,
+            deleteColumn: true,
+            deleteTable: true,
+          },
+        },
+      },
+      keyboard: {
+        bindings: QuillBetterTable.keyboardBindings,
+      },
+      history: {
+        delay: 1000,
+        maxStack: 100,
+        userOnly: true,
+      },
+    }),
+    []
+  );
 
-  [{ align: [] }],
-
-  [{ color: [] }, { background: [] }],
-
-  ["link", "image", "video", "table"],
-
-  ["clean"],
-];
-
-// Quill modules
-export const modules = {
-  toolbar: toolbarOptions,
-  table: true,
-  history: {
-    delay: 1000,
-    maxStack: 100,
-    userOnly: true,
-  },
+  return (
+    <CustomQuill
+      ref={quillRef}
+      theme="snow"
+      modules={modules}
+      value={value}
+      onChange={(content) => {
+        setValue(content);
+        onChange?.(content);
+      }}
+      placeholder="Start typing..."
+    />
+  );
 };
 
-// Lazy load react-quill-new
-const CustomQuill = lazy(() => import("react-quill-new"));
-
-export default CustomQuill;
+export default SnowEditor;

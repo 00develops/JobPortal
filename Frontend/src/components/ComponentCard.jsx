@@ -8,13 +8,14 @@ const ComponentCard = ({
   isCloseable,
   isCollapsible,
   isRefreshable,
-  isLink, // Pass a whole tag/element here
+  isLink,        // Pass a whole tag/element here
   className,
   bodyClassName,
-  children
+  children,
+  defaultOpen = true // NEW: control default open state
 }) => {
   const [isVisible, setIsVisible] = useState(true);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(defaultOpen); // collapsed = not open
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const handleClose = () => setIsVisible(false);
@@ -55,7 +56,6 @@ const ComponentCard = ({
             </span>
           )}
 
-          {/* Render the passed tag/element; takes its own space */}
           {isLink && (
             <div className="card-action-item icon-link icon-link-hover link-secondary link-underline-secondarlink-secondary link-underline-opacity-25 fw-semibold">
               {isLink}

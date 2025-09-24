@@ -1,672 +1,353 @@
-// import React, { useState } from "react";
-// import { Form, Button, Alert, Row, Col } from "react-bootstrap";
-// import axios from "axios";
-// import { useNavigate } from "react-router-dom";
-// import Select from "react-select";
-// import ComponentCard from "../../../components/ComponentCard";
-
-// const AddJob = () => {
-//   const navigate = useNavigate();
-
-//   const [jobData, setJobData] = useState({
-//     sector: "",
-//     department: "",
-//     postName: "",
-//     totalVacancies: "",
-//     ageMin: "",
-//     ageMax: "",
-//     referenceDate: "",
-//     relaxations: "",
-//     qualification: "",
-//     finalYearEligible: false,
-//     experienceRequired: false,
-//     genderRestriction: "None",
-//     categoryReservation: [],
-//     jobLocation: "",
-//     selectionProcess: [],
-//   });
-
-//   const [message, setMessage] = useState("");
-//   const [variant, setVariant] = useState("success");
-//   const [isSubmitting, setIsSubmitting] = useState(false);
-
-//   const handleChange = (e) => {
-//     const { name, value, type, checked } = e.target;
-//     if (type === "checkbox") {
-//       setJobData((prev) => ({ ...prev, [name]: checked }));
-//     } else {
-//       setJobData((prev) => ({ ...prev, [name]: value }));
-//     }
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     setIsSubmitting(true);
-
-//     try {
-//       const payload = {
-//         ...jobData,
-//         ageLimit: {
-//           min: Number(jobData.ageMin),
-//           max: Number(jobData.ageMax),
-//           referenceDate: jobData.referenceDate,
-//           relaxations: jobData.relaxations,
-//         },
-//       };
-
-//       const response = await axios.post(
-//         `${import.meta.env.VITE_BASE_URL}/api/jobs`,
-//         payload
-//       );
-
-//       setMessage(`Job "${response.data.postName}" added successfully!`);
-//       setVariant("success");
-
-//       setJobData({
-//         sector: "",
-//         department: "",
-//         postName: "",
-//         totalVacancies: "",
-//         ageMin: "",
-//         ageMax: "",
-//         referenceDate: "",
-//         relaxations: "",
-//         qualification: "",
-//         finalYearEligible: false,
-//         experienceRequired: false,
-//         genderRestriction: "None",
-//         categoryReservation: [],
-//         jobLocation: "",
-//         selectionProcess: [],
-//       });
-
-//       setTimeout(() => navigate("/admin/jobs"), 1000);
-//     } catch (err) {
-//       setMessage(err.response?.data?.message || "Failed to add job.");
-//       setVariant("danger");
-//       console.error(err);
-//     } finally {
-//       setIsSubmitting(false);
-//     }
-//   };
-
-//   return (
-//     <div className="pt-4">
-//       <ComponentCard title="Add Job">
-//         {message && <Alert variant={variant}>{message}</Alert>}
-//         <Form onSubmit={handleSubmit}>
-//           {/* Row 1 */}
-//           <Row className="mb-3">
-//             <Col md={4}>
-//               <Form.Group>
-//                 <Form.Label>Sector *</Form.Label>
-//                 <Form.Control
-//                   type="text"
-//                   name="sector"
-//                   value={jobData.sector}
-//                   onChange={handleChange}
-//                   placeholder="Sector"
-//                   required
-//                 />
-//               </Form.Group>
-//             </Col>
-//             <Col md={4}>
-//               <Form.Group>
-//                 <Form.Label>Department *</Form.Label>
-//                 <Form.Control
-//                   type="text"
-//                   name="department"
-//                   value={jobData.department}
-//                   onChange={handleChange}
-//                   placeholder="Department"
-//                   required
-//                 />
-//               </Form.Group>
-//             </Col>
-//             <Col md={4}>
-//               <Form.Group>
-//                 <Form.Label>Post Name *</Form.Label>
-//                 <Form.Control
-//                   type="text"
-//                   name="postName"
-//                   value={jobData.postName}
-//                   onChange={handleChange}
-//                   placeholder="Post Name"
-//                   required
-//                 />
-//               </Form.Group>
-//             </Col>
-//           </Row>
-
-//           {/* Row 2 */}
-//           <Row className="mb-3">
-//             <Col md={4}>
-//               <Form.Group>
-//                 <Form.Label>Total Vacancies *</Form.Label>
-//                 <Form.Control
-//                   type="number"
-//                   name="totalVacancies"
-//                   value={jobData.totalVacancies}
-//                   onChange={handleChange}
-//                   placeholder="Total Vacancies"
-//                   required
-//                 />
-//               </Form.Group>
-//             </Col>
-//             <Col md={4}>
-//               <Form.Group>
-//                 <Form.Label>Min Age *</Form.Label>
-//                 <Form.Control
-//                   type="number"
-//                   name="ageMin"
-//                   value={jobData.ageMin}
-//                   onChange={handleChange}
-//                   placeholder="Min Age"
-//                   required
-//                 />
-//               </Form.Group>
-//             </Col>
-//             <Col md={4}>
-//               <Form.Group>
-//                 <Form.Label>Max Age *</Form.Label>
-//                 <Form.Control
-//                   type="number"
-//                   name="ageMax"
-//                   value={jobData.ageMax}
-//                   onChange={handleChange}
-//                   placeholder="Max Age"
-//                   required
-//                 />
-//               </Form.Group>
-//             </Col>
-//           </Row>
-
-//           {/* Row 3 */}
-//           <Row className="mb-3">
-//             <Col md={4}>
-//               <Form.Group>
-//                 <Form.Label>Reference Date *</Form.Label>
-//                 <Form.Control
-//                   type="date"
-//                   name="referenceDate"
-//                   value={jobData.referenceDate}
-//                   onChange={handleChange}
-//                   required
-//                 />
-//               </Form.Group>
-//             </Col>
-//             <Col md={4}>
-//               <Form.Group>
-//                 <Form.Label>Relaxations</Form.Label>
-//                 <Form.Control
-//                   type="text"
-//                   name="relaxations"
-//                   value={jobData.relaxations}
-//                   onChange={handleChange}
-//                   placeholder="Relaxations"
-//                 />
-//               </Form.Group>
-//             </Col>
-//             <Col md={4}>
-//               <Form.Group>
-//                 <Form.Label>Qualification *</Form.Label>
-//                 <Form.Control
-//                   type="text"
-//                   name="qualification"
-//                   value={jobData.qualification}
-//                   onChange={handleChange}
-//                   placeholder="Qualification"
-//                   required
-//                 />
-//               </Form.Group>
-//             </Col>
-//           </Row>
-
-//           {/* Row 4: Checkboxes, Gender, Job Location */}
-//           <Row className="mb-3">
-//             <Col md={4} className="d-flex flex-column justify-content-center">
-//               <Form.Check
-//                 type="checkbox"
-//                 label="Final Year Eligible"
-//                 name="finalYearEligible"
-//                 checked={jobData.finalYearEligible}
-//                 onChange={handleChange}
-//                 className="mb-2"
-//               />
-//               <Form.Check
-//                 type="checkbox"
-//                 label="Experience Required"
-//                 name="experienceRequired"
-//                 checked={jobData.experienceRequired}
-//                 onChange={handleChange}
-//               />
-//             </Col>
-//             <Col md={4} className="d-flex flex-column justify-content-center">
-//               <Form.Label className="mb-1">Gender Restriction</Form.Label>
-//               <Form.Select
-//                 name="genderRestriction"
-//                 value={jobData.genderRestriction}
-//                 onChange={handleChange}
-//               >
-//                 <option value="None">None</option>
-//                 <option value="Male">Male</option>
-//                 <option value="Female">Female</option>
-//               </Form.Select>
-//             </Col>
-//             <Col md={4}>
-//               <Form.Group>
-//                 <Form.Label>Job Location *</Form.Label>
-//                 <Form.Control
-//                   type="text"
-//                   name="jobLocation"
-//                   value={jobData.jobLocation}
-//                   onChange={handleChange}
-//                   placeholder="Job Location"
-//                   required
-//                 />
-//               </Form.Group>
-//             </Col>
-//           </Row>
-
-//           {/* Row 5: Category & Selection Process */}
-//           <Row className="mb-3">
-//             <Col md={4}>
-//               <Form.Label>Category Reservation</Form.Label>
-//               <Select
-                
-//                 name="categoryReservation"
-//                 options={[
-//                   { value: "UR", label: "UR" },
-//                   { value: "OBC", label: "OBC" },
-//                   { value: "SC", label: "SC" },
-//                   { value: "ST", label: "ST" },
-//                   { value: "EWS", label: "EWS" },
-//                 ]}
-//                 value={jobData.categoryReservation.map((c) => ({ value: c, label: c }))}
-//                 onChange={(selectedOptions) => {
-//                   setJobData((prev) => ({
-//                     ...prev,
-//                     categoryReservation: selectedOptions
-//                       ? selectedOptions.map((o) => o.value)
-//                       : [],
-//                   }));
-//                 }}
-//                 placeholder="Select category..."
-//               />
-//             </Col>
-//             <Col md={4}>
-//               <Form.Label>Selection Process</Form.Label>
-//               <Select
-                
-//                 name="selectionProcess"
-//                 options={[
-//                   { value: "Tier-I", label: "Tier-I" },
-//                   { value: "Tier-II", label: "Tier-II" },
-//                   { value: "Interview", label: "Interview" },
-//                   { value: "DV", label: "DV" },
-//                   { value: "Medical", label: "Medical" },
-//                 ]}
-//                 value={jobData.selectionProcess.map((s) => ({ value: s, label: s }))}
-//                 onChange={(selectedOptions) => {
-//                   setJobData((prev) => ({
-//                     ...prev,
-//                     selectionProcess: selectedOptions
-//                       ? selectedOptions.map((o) => o.value)
-//                       : [],
-//                   }));
-//                 }}
-//                 placeholder="Select selection process..."
-//               />
-//             </Col>
-//           </Row>
-
-//           <Button type="submit" disabled={isSubmitting}>
-//             {isSubmitting ? "Submitting..." : "Add Job"}
-//           </Button>
-//         </Form>
-//       </ComponentCard>
-//     </div>
-//   );
-// };
-
-// export default AddJob;
-import React, { useState } from "react";
-import { Form, Button, Alert, Row, Col } from "react-bootstrap";
-import axios from "axios";
+import { useState } from "react";
+import { Form, Button, Row, Col, Alert } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-import Select from "react-select";
+import axios from "axios";
+import SnowEditor from "@/components/SnowEditor";
 import ComponentCard from "../../../components/ComponentCard";
-
-const categoryOptions = [
-  { value: "UR", label: "UR" },
-  { value: "OBC", label: "OBC" },
-  { value: "SC", label: "SC" },
-  { value: "ST", label: "ST" },
-  { value: "EWS", label: "EWS" },
-];
-
-const selectionOptions = [
-  { value: "Tier-I", label: "Tier-I" },
-  { value: "Tier-II", label: "Tier-II" },
-  { value: "Interview", label: "Interview" },
-  { value: "DV", label: "DV" },
-  { value: "Medical", label: "Medical" },
-];
 
 const AddJob = () => {
   const navigate = useNavigate();
 
-  const [jobData, setJobData] = useState({
-    sector: "",
-    department: "",
+  const [value, setValue] = useState({
     postName: "",
-    totalVacancies: "",
-    ageMin: "",
-    ageMax: "",
-    referenceDate: "",
-    relaxations: "",
-    qualification: "",
-    finalYearEligible: false,
-    experienceRequired: false,
-    genderRestriction: "None",
-    categoryReservation: [],
+    organization: "",
+    advtNumber: "",
+    jobType: "",
+    jobCategory: "",
     jobLocation: "",
-    selectionProcess: [],
+    payScale: "",
+    applicationStartDate: "",
+    lastDateToApply: "",
+    importantDates: [{ title: "", date: "" }],
+    applicationFee: { title: "", description: "", richDescription: "" },
+    vacancyDetails: { title: "", description: "", richDescription: "" },
+    eligibilityCriteria: { title: "", description: "", richDescription: "" },
+    salaryBenefits: { title: "", description: "", richDescription: "" },
+    selectionProcess: { title: "", description: "", richDescription: "" },
+    importantLinks: { title: "", description: "", richDescription: "" },
+    howToApply: { title: "", description: "", richDescription: "" },
+    metaDetails: { title: "", description: "", keywords: "", schemas: "" },
   });
 
-  const [message, setMessage] = useState("");
-  const [variant, setVariant] = useState("success");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [message, setMessage] = useState({ text: "", variant: "" });
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setJobData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-  };
+  // ------------------ Plain Text Input ------------------
+  const handleChange = (e, section, field, index) => {
+    const { name, value: inputValue } = e.target;
 
-  const handleSelectChange = (selected, name) => {
-    setJobData((prev) => ({
-      ...prev,
-      [name]: selected ? selected.map((opt) => opt.value) : [],
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    const payload = {
-      ...jobData,
-      ageLimit: {
-        min: Number(jobData.ageMin),
-        max: Number(jobData.ageMax),
-        referenceDate: jobData.referenceDate,
-        relaxations: jobData.relaxations,
-      },
-    };
-
-    try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/api/jobs`,
-        payload
-      );
-      setMessage(`Job "${response.data.postName}" added successfully!`);
-      setVariant("success");
-
-      setJobData({
-        sector: "",
-        department: "",
-        postName: "",
-        totalVacancies: "",
-        ageMin: "",
-        ageMax: "",
-        referenceDate: "",
-        relaxations: "",
-        qualification: "",
-        finalYearEligible: false,
-        experienceRequired: false,
-        genderRestriction: "None",
-        categoryReservation: [],
-        jobLocation: "",
-        selectionProcess: [],
+    if (section === "importantDates") {
+      const dates = [...value.importantDates];
+      dates[index][field] = inputValue;
+      setValue({ ...value, importantDates: dates });
+    } else if (section) {
+      setValue({
+        ...value,
+        [section]: { ...value[section], [field]: inputValue },
       });
-
-      setTimeout(() => navigate("/admin/jobs"), 1000);
-    } catch (err) {
-      console.error(err);
-      setMessage(err.response?.data?.message || "Failed to add job.");
-      setVariant("danger");
-    } finally {
-      setIsSubmitting(false);
+    } else {
+      setValue({ ...value, [name]: inputValue });
     }
   };
 
-  return (
-    <div className="pt-4">
-      <ComponentCard title="Add Job">
-        {message && <Alert variant={variant}>{message}</Alert>}
-        <Form onSubmit={handleSubmit}>
-          {/* Row 1: Sector, Department, Post Name */}
-          <Row className="mb-3">
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label>Sector *</Form.Label>
-                <Form.Control
-                  type="text"
-                  name="sector"
-                  value={jobData.sector}
-                  onChange={handleChange}
-                  placeholder="Central Govt / State Govt / PSU"
-                  required
-                />
-              </Form.Group>
-            </Col>
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label>Department *</Form.Label>
-                <Form.Control
-                  type="text"
-                  name="department"
-                  value={jobData.department}
-                  onChange={handleChange}
-                  placeholder="Department Name"
-                  required
-                />
-              </Form.Group>
-            </Col>
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label>Post Name *</Form.Label>
-                <Form.Control
-                  type="text"
-                  name="postName"
-                  value={jobData.postName}
-                  onChange={handleChange}
-                  placeholder="Post Name"
-                  required
-                />
-              </Form.Group>
-            </Col>
-          </Row>
+  // ------------------ Rich Text Editor Input ------------------
+  const handleRichEditorChange = (content, section) => {
+    setValue({
+      ...value,
+      [section]: { ...value[section], richDescription: content },
+    });
+  };
 
-          {/* Row 2: Total Vacancies, Age Min, Age Max */}
-          <Row className="mb-3">
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label>Total Vacancies *</Form.Label>
-                <Form.Control
-                  type="number"
-                  name="totalVacancies"
-                  value={jobData.totalVacancies}
-                  onChange={handleChange}
-                  placeholder="Total Vacancies"
-                  required
-                />
-              </Form.Group>
-            </Col>
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label>Min Age *</Form.Label>
-                <Form.Control
-                  type="number"
-                  name="ageMin"
-                  value={jobData.ageMin}
-                  onChange={handleChange}
-                  placeholder="Min Age"
-                  required
-                />
-              </Form.Group>
-            </Col>
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label>Max Age *</Form.Label>
-                <Form.Control
-                  type="number"
-                  name="ageMax"
-                  value={jobData.ageMax}
-                  onChange={handleChange}
-                  placeholder="Max Age"
-                  required
-                />
-              </Form.Group>
-            </Col>
-          </Row>
+  // ------------------ Important Dates ------------------
+  const addImportantDate = () => {
+    setValue({
+      ...value,
+      importantDates: [...value.importantDates, { title: "", date: "" }],
+    });
+  };
 
-          {/* Row 3: Reference Date, Relaxations, Qualification */}
-          <Row className="mb-3">
-            <Col md={4}>
+  const deleteImportantDate = (index) => {
+    const dates = [...value.importantDates];
+    dates.splice(index, 1);
+    setValue({ ...value, importantDates: dates });
+  };
+
+  // ------------------ Submit Handler ------------------
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/api/jobs`,
+        value
+      );
+      setMessage({ text: "Job submitted successfully!", variant: "success" });
+      setTimeout(() => navigate("/admin/jobs"), 1500);
+      console.log(response.data);
+    } catch (error) {
+      console.error("Error submitting job:", error);
+      setMessage({ text: "Failed to submit job.", variant: "danger" });
+    }
+  };
+
+  return ( 
+    <Form onSubmit={handleSubmit} className="pt-4 pb-2">
+      {message.text && (
+        <Alert
+          variant={message.variant}
+          onClose={() => setMessage({ text: "", variant: "" })}
+          dismissible
+        >
+          {message.text}
+        </Alert>
+      )}
+
+      {/* -------------------- Basic Job Details -------------------- */}
+      <ComponentCard title="Basic Job Details" className="py-1" isCollapsible defaultOpen={false}>
+        <Row>
+          <Col md={4}>
+            <Form.Group className="mb-2">
+              <Form.Label>Job Title / Post Name</Form.Label>
+              <Form.Control
+                type="text"
+                name="postName"
+                value={value.postName}
+                onChange={handleChange}
+                required
+              />
+            </Form.Group>
+          </Col>
+          <Col md={4}>
+            <Form.Group className="mb-2">
+              <Form.Label>Organization / Department</Form.Label>
+              <Form.Control
+                type="text"
+                name="organization"
+                value={value.organization}
+                onChange={handleChange}
+                required
+              />
+            </Form.Group>
+          </Col>
+          <Col md={4}>
+            <Form.Group className="mb-2">
+              <Form.Label>Advt. Number / Reference ID</Form.Label>
+              <Form.Control
+                type="text"
+                name="advtNumber"
+                value={value.advtNumber}
+                onChange={handleChange}
+                required
+              />
+            </Form.Group>
+          </Col>
+        </Row>
+        <Row>
+          <Col md={4}>
+            <Form.Group className="mb-2">
+              <Form.Label>Job Type</Form.Label>
+              <Form.Control
+                type="text"
+                name="jobType"
+                value={value.jobType}
+                onChange={handleChange}
+              />
+            </Form.Group>
+          </Col>
+          <Col md={4}>
+            <Form.Group className="mb-2">
+              <Form.Label>Category of Job</Form.Label>
+              <Form.Control
+                type="text"
+                name="jobCategory"
+                value={value.jobCategory}
+                onChange={handleChange}
+              />
+            </Form.Group>
+          </Col>
+          <Col md={4}>
+            <Form.Group className="mb-2">
+              <Form.Label>Job Location</Form.Label>
+              <Form.Control
+                type="text"
+                name="jobLocation"
+                value={value.jobLocation}
+                onChange={handleChange}
+              />
+            </Form.Group>
+          </Col>
+        </Row>
+        <Row>
+          <Col md={4}>
+            <Form.Group className="mb-2">
+              <Form.Label>Pay Scale / Salary</Form.Label>
+              <Form.Control
+                type="text"
+                name="payScale"
+                value={value.payScale}
+                onChange={handleChange}
+              />
+            </Form.Group>
+          </Col>
+          <Col md={4}>
+            <Form.Group className="mb-2">
+              <Form.Label>Application Start Date</Form.Label>
+              <Form.Control
+                type="date"
+                name="applicationStartDate"
+                value={value.applicationStartDate?.split("T")[0] || ""}
+                onChange={handleChange}
+              />
+            </Form.Group>
+          </Col>
+          <Col md={4}>
+            <Form.Group className="mb-2">
+              <Form.Label>Last Date to Apply</Form.Label>
+              <Form.Control
+                type="date"
+                name="lastDateToApply"
+                value={value.lastDateToApply?.split("T")[0] || ""}
+                onChange={handleChange}
+              />
+            </Form.Group>
+          </Col>
+        </Row>
+      </ComponentCard>
+
+      {/* -------------------- Important Dates -------------------- */}
+      <ComponentCard title="Important Dates" className="py-1" isCollapsible defaultOpen>
+        {value.importantDates.map((dateItem, idx) => (
+          <Row className="mb-2 align-items-end" key={idx}>
+            <Col md={5}>
               <Form.Group>
-                <Form.Label>Reference Date *</Form.Label>
+                <Form.Label>Title</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={dateItem.title}
+                  onChange={(e) => handleChange(e, "importantDates", "title", idx)}
+                  required
+                />
+              </Form.Group>
+            </Col>
+            <Col md={5}>
+              <Form.Group>
+                <Form.Label>Date</Form.Label>
                 <Form.Control
                   type="date"
-                  name="referenceDate"
-                  value={jobData.referenceDate}
-                  onChange={handleChange}
+                  value={dateItem.date}
+                  onChange={(e) => handleChange(e, "importantDates", "date", idx)}
                   required
                 />
               </Form.Group>
             </Col>
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label>Relaxations</Form.Label>
-                <Form.Control
-                  type="text"
-                  name="relaxations"
-                  value={jobData.relaxations}
-                  onChange={handleChange}
-                  placeholder="SC/ST/OBC/PWD"
-                />
-              </Form.Group>
-            </Col>
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label>Qualification *</Form.Label>
-                <Form.Control
-                  type="text"
-                  name="qualification"
-                  value={jobData.qualification}
-                  onChange={handleChange}
-                  placeholder="Bachelor's / Master's / etc."
-                  required
-                />
-              </Form.Group>
+            <Col md={2} className="d-flex gap-2">
+              <Button variant="primary" size="sm" onClick={addImportantDate}>+</Button>
+              {value.importantDates.length > 1 && (
+                <Button variant="danger" size="sm" onClick={() => deleteImportantDate(idx)}>-</Button>
+              )}
             </Col>
           </Row>
-
-          {/* Row 4: Checkboxes + Gender */}
-          <Row className="mb-3">
-            <Col md={4}>
-              <div className="d-flex flex-column">
-                <Form.Check
-                  type="checkbox"
-                  label="Final Year Eligible"
-                  name="finalYearEligible"
-                  checked={jobData.finalYearEligible}
-                  onChange={handleChange}
-                  className="mb-2"
-                />
-                <Form.Check
-                  type="checkbox"
-                  label="Experience Required"
-                  name="experienceRequired"
-                  checked={jobData.experienceRequired}
-                  onChange={handleChange}
-                />
-              </div>
-            </Col>
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label>Gender Restriction</Form.Label>
-                <Form.Select
-                  name="genderRestriction"
-                  value={jobData.genderRestriction}
-                  onChange={handleChange}
-                >
-                  <option value="None">None</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Female">Other</option>
-                  <option value="Female">All</option>
-                </Form.Select>
-              </Form.Group>
-            </Col>
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label>Job Location *</Form.Label>
-                <Form.Control
-                  type="text"
-                  name="jobLocation"
-                  value={jobData.jobLocation}
-                  onChange={handleChange}
-                  placeholder="All India / City / State"
-                  required
-                />
-              </Form.Group>
-            </Col>
-          </Row>
-
-          {/* Row 5: Category Reservation, Mode of Selection */}
-          <Row className="mb-3">
-            <Col md={6}>
-              <Form.Group>
-                <Form.Label>Category-wise Reservation</Form.Label>
-                <Select
-                  isMulti
-                  options={categoryOptions}
-                  value={jobData.categoryReservation.map((c) => ({
-                    value: c,
-                    label: c,
-                  }))}
-                  onChange={(selected) => handleSelectChange(selected, "categoryReservation")}
-                  placeholder="Select categories..."
-                />
-              </Form.Group>
-            </Col>
-            <Col md={6}>
-              <Form.Group>
-                <Form.Label>Mode of Selection</Form.Label>
-                <Select
-                  isMulti
-                  options={selectionOptions}
-                  value={jobData.selectionProcess.map((s) => ({
-                    value: s,
-                    label: s,
-                  }))}
-                  onChange={(selected) => handleSelectChange(selected, "selectionProcess")}
-                  placeholder="Select stages..."
-                />
-              </Form.Group>
-            </Col>
-          </Row>
-
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Submitting..." : "Add Job"}
-          </Button>
-        </Form>
+        ))}
       </ComponentCard>
-    </div>
+
+      {/* -------------------- Sections with Text + Rich Text -------------------- */}
+      {[
+        { key: "applicationFee", label: "Application Fee" },
+        { key: "vacancyDetails", label: "Vacancy Details" },
+        { key: "eligibilityCriteria", label: "Eligibility Criteria" },
+        { key: "salaryBenefits", label: "Salary & Benefits" },
+        { key: "selectionProcess", label: "Selection Process" },
+        { key: "importantLinks", label: "Important Links" },
+        { key: "howToApply", label: "How to Apply" },
+      ].map((section) => (
+        <ComponentCard key={section.key} title={section.label} className="py-1" isCollapsible defaultOpen>
+          <Row>
+            <Col md={6}>
+              <Form.Group className="mb-2">
+                <Form.Label>Title</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={value[section.key].title || ""}
+                  onChange={(e) => handleChange(e, section.key, "title")}
+                />
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group className="mb-2">
+                <Form.Label>Description (Text Input)</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={value[section.key].description || ""}
+                  onChange={(e) => handleChange(e, section.key, "description")}
+                />
+              </Form.Group>
+            </Col>
+          </Row>
+          <Row>
+            <Col md={12}>
+              <Form.Group className="mb-2">
+                <Form.Label>Description (Rich Text)</Form.Label>
+                <SnowEditor
+                  value={value[section.key].richDescription || ""}
+                  onChange={(content) => handleRichEditorChange(content, section.key)}
+                />
+              </Form.Group>
+            </Col>
+          </Row>
+        </ComponentCard>
+      ))}
+
+      {/* -------------------- Meta Details -------------------- */}
+      <ComponentCard title="Meta Details" isCollapsible defaultOpen>
+        <Row>
+          <Col md={4}>
+            <Form.Group className="mb-2">
+              <Form.Label>Title</Form.Label>
+              <Form.Control
+                type="text"
+                value={value.metaDetails.title || ""}
+                onChange={(e) => handleChange(e, "metaDetails", "title")}
+              />
+            </Form.Group>
+          </Col>
+          <Col md={4}>
+            <Form.Group className="mb-2">
+              <Form.Label>Keywords</Form.Label>
+              <Form.Control
+                type="text"
+                value={value.metaDetails.keywords || ""}
+                onChange={(e) => handleChange(e, "metaDetails", "keywords")}
+              />
+            </Form.Group>
+          </Col>
+          <Col md={4}>
+            <Form.Group className="mb-2">
+              <Form.Label>Description</Form.Label>
+              <Form.Control
+                type="text"
+                value={value.metaDetails.description || ""}
+                onChange={(e) => handleChange(e, "metaDetails", "description")}
+              />
+            </Form.Group>
+          </Col>
+        </Row>
+        <Row>
+          <Col md={12}>
+            <Form.Group className="mb-2">
+              <Form.Label>Schemas</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={4}
+                value={value.metaDetails.schemas || ""}
+                onChange={(e) => handleChange(e, "metaDetails", "schemas")}
+              />
+            </Form.Group>
+          </Col>
+        </Row>
+      </ComponentCard>
+
+      <Button type="submit" variant="primary" className="mt-3">
+        Submit Job
+      </Button>
+    </Form>
   );
 };
 

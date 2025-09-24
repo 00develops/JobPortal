@@ -20,7 +20,7 @@ const Page = () => {
                     </NavItem>
 
                 </Nav>
-                <ComponentCard title="List"isLink={<Link to="/admin/sub-category/add" >
+                <ComponentCard className="pb-2" title="List"isLink={<Link to="/admin/sub-category/add" >
                     + Add Sub Category
                 </Link>}>
                     <TabPane eventKey="Category-List" >

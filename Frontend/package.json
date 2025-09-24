@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ckeditor/ckeditor5-react": "^11.0.0",
     "@fullcalendar/core": "^6.1.18",
     "@fullcalendar/daygrid": "^6.1.18",
     "@fullcalendar/interaction": "^6.1.18",
@@ -21,6 +22,7 @@
     "axios": "^1.12.2",
     "bootstrap": "^5.3.7",
     "chart.js": "^4.5.0",
+    "ckeditor5": "^46.1.1",
     "clsx": "^2.1.1",
     "datatables.net-bs5": "^2.3.2",
     "datatables.net-buttons": "^3.2.3",
@@ -36,6 +38,9 @@
     "leaflet": "^1.9.4",
     "pdfmake": "^0.2.20",
     "quill": "^2.0.3",
+    "quill-better-table": "^1.2.10",
+    "quill-table": "^1.0.0",
+    "quill-table-ui": "^1.0.7",
     "react": "^19.1.0",
     "react-bootstrap": "^2.10.10",
     "react-bootstrap-typeahead": "^6.4.1",
@@ -47,6 +52,7 @@
     "react-hook-form": "^7.59.0",
     "react-icons": "^5.5.0",
     "react-leaflet": "^5.0.0",
+    "react-quill": "^2.0.0-beta.4",
     "react-quill-new": "3.4.6",
     "react-router-dom": "^7.6.3",
     "react-select": "^5.10.1",

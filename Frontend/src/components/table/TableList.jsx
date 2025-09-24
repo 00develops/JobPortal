@@ -4,6 +4,7 @@ import "datatables.net-bs5";
 import "datatables.net-buttons-bs5";
 import "datatables.net-buttons/js/buttons.html5";
 import "datatables.net-responsive-bs5";
+
 import jszip from "jszip";
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
@@ -29,10 +30,7 @@ const TableList = ({ data = [], columns = [], options = {}, className }) => {
     dtInstance.current = $(tableRef.current).DataTable({
       data,
       columns,
-      dom: `<"d-flex justify-content-between mb-2"
-              <"dt-buttons"B>
-              <"dataTables_filter"f>
-            >rtip`,
+       dom: "<'d-md-flex justify-content-between align-items-center my-2'<'dropdown'B>f>" + 'rt' + "<'d-md-flex justify-content-between align-items-center mt-2'ip>",
       buttons: [
         { extend: "copyHtml5", className: "btn btn-sm btn-secondary" },
         { extend: "csvHtml5", className: "btn btn-sm btn-secondary" },
@@ -53,7 +51,7 @@ const TableList = ({ data = [], columns = [], options = {}, className }) => {
   return (
     <table
       ref={tableRef}
-      className={className || "table table-striped dt-responsive w-100"}
+      className={className || "table table-striped dt-responsive w-100 "}
     />
   );
 };

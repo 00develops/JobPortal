@@ -1,218 +1,290 @@
-import React, { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import Select from "react-select";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { Form, Button, Row, Col, Alert } from "react-bootstrap";
 import axios from "axios";
-import { Form, Button, Container, Row, Col, Alert } from "react-bootstrap";
+import SnowEditor from "@/components/SnowEditor";
 import ComponentCard from "../../../components/ComponentCard";
 
-const categoryOptions = [
-  { value: "UR", label: "UR" },
-  { value: "OBC", label: "OBC" },
-  { value: "SC", label: "SC" },
-  { value: "ST", label: "ST" },
-  { value: "EWS", label: "EWS" },
-];
-
-const selectionOptions = [
-  { value: "Tier-I", label: "Tier-I" },
-  { value: "Tier-II", label: "Tier-II" },
-  { value: "Interview", label: "Interview" },
-  { value: "DV", label: "DV" },
-  { value: "Medical", label: "Medical" },
-];
-
 const EditJob = () => {
-  const location = useLocation();
+  const { id } = useParams();
   const navigate = useNavigate();
-  const jobData = location.state;
 
-  const [form, setForm] = useState({
-    sector: "",
-    department: "",
+  const [value, setvalue] = useState({
     postName: "",
-    totalVacancies: "",
-    ageMin: "",
-    ageMax: "",
-    referenceDate: "",
-    relaxations: "",
-    qualification: "",
-    finalYearEligible: false,
-    experienceRequired: false,
-    genderRestriction: "None",
-    categoryReservation: [],
+    organization: "",
+    advtNumber: "",
+    jobType: "",
+    jobCategory: "",
     jobLocation: "",
-    selectionProcess: [],
+    payScale: "",
+    applicationStartDate: "",
+    lastDateToApply: "",
+    importantDates: [{ title: "", date: "" }],
+    applicationFee: { title: "", description: "", richDescription: "" },
+    vacancyDetails: { title: "", description: "", richDescription: "" },
+    eligibilityCriteria: { title: "", description: "", richDescription: "" },
+    salaryBenefits: { title: "", description: "", richDescription: "" },
+    selectionProcess: { title: "", description: "", richDescription: "" },
+    importantLinks: { title: "", description: "", richDescription: "" },
+    howToApply: { title: "", description: "", richDescription: "" },
+    metaDetails: { title: "", description: "", keywords: "", schemas: "" },
   });
 
-  const [message, setMessage] = useState("");
-  const [variant, setVariant] = useState("success");
+  const [message, setMessage] = useState({ text: "", variant: "" });
+
+  const formatDateForInput = (isoDate) => (isoDate ? isoDate.split("T")[0] : "");
 
   useEffect(() => {
-    if (jobData) {
-      setForm({
-        sector: jobData.sector || "",
-        department: jobData.department || "",
-        postName: jobData.postName || "",
-        totalVacancies: jobData.totalVacancies || "",
-        ageMin: jobData.ageLimit?.min || "",
-        ageMax: jobData.ageLimit?.max || "",
-        referenceDate: jobData.ageLimit?.referenceDate
-          ? new Date(jobData.ageLimit.referenceDate).toISOString().slice(0, 10)
-          : "",
-        relaxations: jobData.ageLimit?.relaxations || "",
-        qualification: jobData.qualification || "",
-        finalYearEligible: jobData.finalYearEligible || false,
-        experienceRequired: jobData.experienceRequired || false,
-        genderRestriction: jobData.genderRestriction || "None",
-        categoryReservation: jobData.categoryReservation?.map((v) => ({ value: v, label: v })) || [],
-        jobLocation: jobData.jobLocation || "",
-        selectionProcess: jobData.selectionProcess?.map((v) => ({ value: v, label: v })) || [],
-      });
-    }
-  }, [jobData]);
+    const fetchJob = async () => {
+      try {
+        const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/jobs/${id}`);
+        const data = response.data;
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setForm((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
+        // Ensure all sections exist
+        [
+          "applicationFee",
+          "vacancyDetails",
+          "eligibilityCriteria",
+          "salaryBenefits",
+          "selectionProcess",
+          "importantLinks",
+          "howToApply",
+        ].forEach((key) => {
+          if (!data[key]) data[key] = { title: "", description: "", richDescription: "" };
+          if (!data[key].description) data[key].description = "";
+          if (!data[key].richDescription) data[key].richDescription = "";
+        });
+
+        setvalue(data);
+      } catch (error) {
+        console.error("Error fetching job data:", error);
+        setMessage({ text: "Failed to load job data.", variant: "danger" });
+      }
+    };
+    fetchJob();
+  }, [id]);
+
+  const handleChange = (e, section, field, index) => {
+    const { value } = e.target;
+    if (section === "importantDates") {
+      const dates = [...value.importantDates];
+      dates[index][field] = value;
+      setvalue({ ...value, importantDates: dates });
+    } else if (section) {
+      setvalue({ ...value, [section]: { ...value[section], [field]: value } });
+    } else {
+      setvalue({ ...value, [e.target.name]: value });
+    }
   };
 
-  const handleSelectChange = (selected, name) => {
-    setForm((prev) => ({ ...prev, [name]: selected || [] }));
+  const handleRichEditorChange = (content, section) => {
+    setvalue({ ...value, [section]: { ...value[section], richDescription: content } });
+  };
+
+  const addImportantDate = () => {
+    setvalue({ ...value, importantDates: [...value.importantDates, { title: "", date: "" }] });
+  };
+
+  const deleteImportantDate = (index) => {
+    const dates = [...value.importantDates];
+    dates.splice(index, 1);
+    setvalue({ ...value, importantDates: dates });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const payload = {
-      ...form,
-      ageLimit: {
-        min: Number(form.ageMin),
-        max: Number(form.ageMax),
-        referenceDate: form.referenceDate ? new Date(form.referenceDate).toISOString() : null,
-        relaxations: form.relaxations,
-      },
-      categoryReservation: form.categoryReservation.map((opt) => opt.value),
-      selectionProcess: form.selectionProcess.map((opt) => opt.value),
-    };
-
     try {
-      await axios.put(`${import.meta.env.VITE_BASE_URL}/api/jobs/${jobData._id}`, payload);
-      setMessage("Job updated successfully!");
-      setVariant("success");
-      setTimeout(() => navigate("/admin/jobs"), 1000);
-    } catch (err) {
-      console.error(err);
-      setMessage(err.response?.data?.message || "Failed to update job.");
-      setVariant("danger");
+      await axios.put(`${import.meta.env.VITE_BASE_URL}/api/jobs/${id}`, value);
+      setMessage({ text: "Job updated successfully!", variant: "success" });
+      setTimeout(() => navigate("/admin/jobs"), 1500);
+    } catch (error) {
+      console.error("Error updating job:", error);
+      setMessage({ text: "Failed to update job.", variant: "danger" });
     }
   };
 
   return (
-    <div  className="pt-4">
-      <ComponentCard  title="Edit Job">
-        {message && <Alert variant={variant}>{message}</Alert>}
-        
-        <Form onSubmit={handleSubmit}>
-          {/* Row 1 */}
-          <Row className="mb-3">
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label>Sector *</Form.Label>
-                <Form.Control type="text" name="sector" value={form.sector} onChange={handleChange} required />
-              </Form.Group>
-            </Col>
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label>Department *</Form.Label>
-                <Form.Control type="text" name="department" value={form.department} onChange={handleChange} required />
-              </Form.Group>
-            </Col>
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label>Post Name *</Form.Label>
-                <Form.Control type="text" name="postName" value={form.postName} onChange={handleChange} required />
-              </Form.Group>
-            </Col>
-          </Row>
-          {/* Row 2 */}
-          <Row className="mb-3">
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label>Total Vacancies *</Form.Label>
-                <Form.Control type="number" name="totalVacancies" value={form.totalVacancies} onChange={handleChange} required />
-              </Form.Group>
-            </Col>
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label>Min Age *</Form.Label>
-                <Form.Control type="number" name="ageMin" value={form.ageMin} onChange={handleChange} required />
-              </Form.Group>
-            </Col>
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label>Max Age *</Form.Label>
-                <Form.Control type="number" name="ageMax" value={form.ageMax} onChange={handleChange} required />
-              </Form.Group>
-            </Col>
-          </Row>
-          {/* Row 3 */}
-          <Row className="mb-3">
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label>Reference Date *</Form.Label>
-                <Form.Control type="date" name="referenceDate" value={form.referenceDate} onChange={handleChange} required />
-              </Form.Group>
-            </Col>
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label>Relaxations</Form.Label>
-                <Form.Control type="text" name="relaxations" value={form.relaxations} onChange={handleChange} />
-              </Form.Group>
-            </Col>
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label>Qualification *</Form.Label>
-                <Form.Control type="text" name="qualification" value={form.qualification} onChange={handleChange} required />
-              </Form.Group>
-            </Col>
-          </Row>
-          {/* Row 4: Checkboxes, Gender, Job Location */}
-          <Row className="mb-3">
-            <Col md={4} className="d-flex flex-column justify-content-center">
-              <Form.Check type="checkbox" label="Final Year Eligible" name="finalYearEligible" checked={form.finalYearEligible} onChange={handleChange} className="mb-2" />
-              <Form.Check type="checkbox" label="Experience Required" name="experienceRequired" checked={form.experienceRequired} onChange={handleChange} />
-            </Col>
-            <Col md={4} className="d-flex flex-column justify-content-center">
-              <Form.Label className="mb-1">Gender Restriction</Form.Label>
-              <Form.Select name="genderRestriction" value={form.genderRestriction} onChange={handleChange}>
-                <option value="None">None</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Female">Other</option>
-                  <option value="Female">All</option>
-              </Form.Select>
-            </Col>
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label>Job Location *</Form.Label>
-                <Form.Control type="text" name="jobLocation" value={form.jobLocation} onChange={handleChange} required />
-              </Form.Group>
-            </Col>
-          </Row>
-          {/* Row 5: Category & Selection Process */}
-          <Row className="mb-3">
-            <Col md={6}>
-              <Form.Label>Category Reservation</Form.Label>
-              <Select isMulti options={categoryOptions} value={form.categoryReservation} onChange={(selected) => handleSelectChange(selected, "categoryReservation")} placeholder="Select categories..." />
-            </Col>
-            <Col md={6}>
-              <Form.Label>Selection Process</Form.Label>
-              <Select isMulti options={selectionOptions} value={form.selectionProcess} onChange={(selected) => handleSelectChange(selected, "selectionProcess")} placeholder="Select selection process..." />
-            </Col>
-          </Row>
-          <Button type="submit">Update Job</Button>
-        </Form>
-      </ComponentCard>
-    </div>
+    <Form onSubmit={handleSubmit}>
+      {message.text && (
+        <Alert variant={message.variant} onClose={() => setMessage({ text: "", variant: "" })} dismissible>
+          {message.text}
+        </Alert>
+      )}
+
+      <div className="mt-4 pb-2">
+        {/* Basic Job Details */}
+        <fieldset>
+          <ComponentCard title="Basic Job Details"  className="py-1" isCollapsible defaultOpen={false}>
+            <Row>
+              <Col md={4}>
+                <Form.Group className="mb-2">
+                  <Form.Label>Job Title / Post Name</Form.Label>
+                  <Form.Control type="text" name="postName" value={value.postName} onChange={handleChange} required />
+                </Form.Group>
+              </Col>
+              <Col md={4}>
+                <Form.Group className="mb-2">
+                  <Form.Label>Organization / Department</Form.Label>
+                  <Form.Control type="text" name="organization" value={value.organization} onChange={handleChange} required />
+                </Form.Group>
+              </Col>
+              <Col md={4}>
+                <Form.Group className="mb-2">
+                  <Form.Label>Advt. Number / Reference ID</Form.Label>
+                  <Form.Control type="text" name="advtNumber" value={value.advtNumber} onChange={handleChange} required />
+                </Form.Group>
+              </Col>
+            </Row>
+            <Row>
+              <Col md={4}>
+                <Form.Group className="mb-2">
+                  <Form.Label>Job Type</Form.Label>
+                  <Form.Control type="text" name="jobType" value={value.jobType} onChange={handleChange} />
+                </Form.Group>
+              </Col>
+              <Col md={4}>
+                <Form.Group className="mb-2">
+                  <Form.Label>Category of Job</Form.Label>
+                  <Form.Control type="text" name="jobCategory" value={value.jobCategory} onChange={handleChange} />
+                </Form.Group>
+              </Col>
+              <Col md={4}>
+                <Form.Group className="mb-2">
+                  <Form.Label>Job Location</Form.Label>
+                  <Form.Control type="text" name="jobLocation" value={value.jobLocation} onChange={handleChange} />
+                </Form.Group>
+              </Col>
+            </Row>
+            <Row>
+              <Col md={4}>
+                <Form.Group className="mb-2">
+                  <Form.Label>Pay Scale / Salary</Form.Label>
+                  <Form.Control type="text" name="payScale" value={value.payScale} onChange={handleChange} />
+                </Form.Group>
+              </Col>
+              <Col md={4}>
+                <Form.Group className="mb-2">
+                  <Form.Label>Application Start Date</Form.Label>
+                  <Form.Control type="date" name="applicationStartDate" value={formatDateForInput(value.applicationStartDate)} onChange={handleChange} />
+                </Form.Group>
+              </Col>
+              <Col md={4}>
+                <Form.Group className="mb-2">
+                  <Form.Label>Last Date to Apply</Form.Label>
+                  <Form.Control type="date" name="lastDateToApply" value={formatDateForInput(value.lastDateToApply)} onChange={handleChange} />
+                </Form.Group>
+              </Col>
+            </Row>
+          </ComponentCard>
+        </fieldset>
+
+        {/* Important Dates */}
+        <fieldset>
+          <ComponentCard title="Important Dates" isCollapsible   className="py-1" >
+          {value.importantDates.map((dateItem, idx) => (
+              <Row className="mb-2 align-items-end">
+                <Col md={5}>
+                  <Form.Group>
+                    <Form.Label>Title</Form.Label>
+                    <Form.Control type="text" value={dateItem.title} onChange={(e) => handleChange(e, "importantDates", "title", idx)} required />
+                  </Form.Group>
+                </Col>
+                <Col md={5}>
+                  <Form.Group>
+                    <Form.Label>Date</Form.Label>
+                    <Form.Control type="date" value={formatDateForInput(dateItem.date)} onChange={(e) => handleChange(e, "importantDates", "date", idx)} required />
+                  </Form.Group>
+                </Col>
+                <Col md={2} className="d-flex justify-content-center align-item-left">
+                  <Button variant="" className="me-2 btn-icon btn btn-primary sm "  onClick={addImportantDate}>+</Button>
+                  {value.importantDates.length > 1 && (
+                    <Button className="btn-icon btn btn-primary sm" variant="" onClick={() => deleteImportantDate(idx)}>-</Button>
+                  )}
+                </Col>
+              </Row>
+          ))}
+          </ComponentCard>
+        </fieldset>
+
+        {/* Sections with Text + Rich Text */}
+        {[
+          { key: "applicationFee", label: "Application Fee" },
+          { key: "vacancyDetails", label: "Vacancy Details" },
+          { key: "eligibilityCriteria", label: "Eligibility Criteria" },
+          { key: "salaryBenefits", label: "Salary & Benefits" },
+          { key: "selectionProcess", label: "Selection Process" },
+          { key: "importantLinks", label: "Important Links" },
+          { key: "howToApply", label: "How to Apply" },
+        ].map((section) => (
+          <fieldset key={section.key}>
+            <ComponentCard title={section.label}  className="py-1"  isCollapsible>
+              <Row>
+                <Col md={6}>
+                  <Form.Group className="mb-2">
+                    <Form.Label>Title</Form.Label>
+                    <Form.Control type="text" value={value[section.key].title || ""} onChange={(e) => handleChange(e, section.key, "title")} />
+                  </Form.Group>
+                </Col>
+                <Col md={6}>
+                  <Form.Group className="mb-2">
+                    <Form.Label>Description (Text Input)</Form.Label>
+                    <Form.Control type="text" value={value[section.key].description || ""} onChange={(e) => handleChange(e, section.key, "description")} />
+                  </Form.Group>
+                </Col>
+              </Row>
+              <Row>
+                <Col md={12}>
+                  <Form.Group className="mb-2">
+                    <Form.Label>Description (Rich Text)</Form.Label>
+                    <SnowEditor
+                      key={section.key}
+                      initialValue={value[section.key].richDescription || ""}
+                      onChange={(content) => handleRichEditorChange(content, section.key)}
+                    />
+                  </Form.Group>
+                </Col>
+              </Row>
+            </ComponentCard>
+          </fieldset>
+        ))}
+
+        {/* Meta Details */}
+        <fieldset>
+          <ComponentCard title="Meta Details"  className="py-1"  isCollapsible>
+            <Row>
+              <Col md={4}>
+                <Form.Group className="mb-2">
+                  <Form.Label>Title</Form.Label>
+                  <Form.Control type="text" value={value.metaDetails.title || ""} onChange={(e) => handleChange(e, "metaDetails", "title")} />
+                </Form.Group>
+              </Col>
+              <Col md={4}>
+                <Form.Group className="mb-2">
+                  <Form.Label>Keywords</Form.Label>
+                  <Form.Control type="text" value={value.metaDetails.keywords || ""} onChange={(e) => handleChange(e, "metaDetails", "keywords")} />
+                </Form.Group>
+              </Col>
+              <Col md={4}>
+                <Form.Group className="mb-2">
+                  <Form.Label>Description</Form.Label>
+                  <Form.Control type="text" value={value.metaDetails.description || ""} onChange={(e) => handleChange(e, "metaDetails", "description")} />
+                </Form.Group>
+              </Col>
+            </Row>
+            <Row>
+              <Col md={12}>
+                <Form.Group className="mb-2">
+                  <Form.Label>Schemas</Form.Label>
+                  <Form.Control as="textarea" rows={4} value={value.metaDetails.schemas || ""} onChange={(e) => handleChange(e, "metaDetails", "schemas")} />
+                </Form.Group>
+              </Col>
+            </Row>
+          </ComponentCard>
+        </fieldset>
+
+        <Button type="submit" variant="primary" className="text-right">Update Job</Button>
+      </div>
+    </Form>
   );
 };
 
