@@ -84,19 +84,21 @@ const ViewJob = () => {
       <ComponentCard title="Job Details" className="mb-4">
         {/* Basic Job Details */}
         <Row>
-          <Col md={4}><Field label="Job Title / Post Name" value={job.postName} /></Col>
+          <Col md={4}><Field label="Job Title " value={job.postName} /></Col>
+          <Col md={4}><Field label="Short Description" value={job.shotDescription} /></Col>
           <Col md={4}><Field label="Organization / Department" value={job.organization} /></Col>
-          <Col md={4}><Field label="Advt. Number / Reference ID" value={job.advtNumber} /></Col>
+      
         </Row>
 
         <Row>
+              <Col md={4}><Field label="Advt. Number / Reference ID" value={job.advtNumber} /></Col>
           <Col md={4}><Field label="Job Type" value={job.jobType} /></Col>
           <Col md={4}><Field label="Job Category" value={job.jobCategory} /></Col>
-          <Col md={4}><Field label="Job Location" value={job.jobLocation} /></Col>
+         
         </Row>
 
         <Row>
-          <Col md={4}><Field label="Pay Scale / Salary" value={job.payScale} /></Col>
+           <Col md={4}><Field label="Job Location" value={job.jobLocation} /></Col>
           <Col md={4}><Field label="Application Start Date" value={job.applicationStartDate?.split("T")[0]} /></Col>
           <Col md={4}><Field label="Last Date to Apply" value={job.lastDateToApply?.split("T")[0]} /></Col>
         </Row>

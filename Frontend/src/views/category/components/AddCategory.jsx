@@ -68,9 +68,9 @@ const AddCategory = () => {
 
   return (
     <Container fluid className="pt-4">
-      <ComponentCard title="Add Category">
+      <ComponentCard title="Add Category" isCollapsible defaultOpen={false}>
         {message && <Alert variant={variant}>{message}</Alert>}
-        <Form onSubmit={handleSubmit}>
+        <Form onSubmit={handleSubmit} className='py-2'>
           <Form.Group className="mb-3" controlId="categoryName">
             <Form.Label>
               Category Name <span className="text-danger">*</span>

@@ -8,11 +8,11 @@ const ComponentCard = ({
   isCloseable,
   isCollapsible,
   isRefreshable,
-  isLink,        // Pass a whole tag/element here
+  isLink,       // Pass a custom element/content for header
   className,
   bodyClassName,
   children,
-  defaultOpen = true // NEW: control default open state
+  defaultOpen = true,
 }) => {
   const [isVisible, setIsVisible] = useState(true);
   const [isCollapsed, setIsCollapsed] = useState(defaultOpen); // collapsed = not open
@@ -27,6 +27,12 @@ const ComponentCard = ({
 
   if (!isVisible) return null;
 
+  // Determine if border should be visible
+  const showBorder =
+    (isCollapsible && !isCollapsed) || // Collapsible and expanded
+    (!isCollapsible && isLink) ||       // Non-collapsible but has header content
+    (!!isLink);                         // Always show if any custom content is passed
+
   return (
     <Card className={clsx(isCollapsed && 'card-collapse', className)}>
       {isRefreshing && (
@@ -35,10 +41,15 @@ const ComponentCard = ({
         </div>
       )}
 
-      <CardHeader className="d-flex justify-content-between align-items-center">
-        <CardTitle>{title}</CardTitle>
+      {/* Header with conditional border */}
+      <CardHeader
+        className="d-flex justify-content-between align-items-center"
+        style={{
+          borderBottom: showBorder ? '1px dashed #dee2e6' : 'none',
+        }}
+      >
+        <CardTitle className="mb-0">{title}</CardTitle>
 
-        {/* Actions */}
         <div className="d-flex align-items-center gap-2">
           {isCollapsible && (
             <span className="card-action-item" onClick={handleToggle}>
@@ -55,9 +66,8 @@ const ComponentCard = ({
               <TbX />
             </span>
           )}
-
           {isLink && (
-            <div className="card-action-item icon-link icon-link-hover link-secondary link-underline-secondarlink-secondary link-underline-opacity-25 fw-semibold">
+            <div className="card-action-item icon-link icon-link-hover link-secondary link-underline-opacity-25 fw-semibold">
               {isLink}
             </div>
           )}

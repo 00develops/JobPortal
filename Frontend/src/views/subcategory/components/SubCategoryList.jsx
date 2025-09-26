@@ -121,10 +121,9 @@ const SubCategoryList = () => {
               options={{
                 responsive: true,
                 pageLength: 10,
-                dom: `<"d-flex justify-content-between mb-2"
-                        <"dt-buttons"B>
-                        <"dataTables_filter"f>
-                      >rtip`,
+                dom:  "<'d-md-flex justify-content-between align-items-center my-2'<'dt-buttons'B>f>" +
+                  "rt" +
+                  "<'d-md-flex justify-content-between align-items-center mt-2'ip>",
                 buttons: [
                   { extend: "copyHtml5", className: "btn btn-sm btn-secondary" },
                   { extend: "csvHtml5", className: "btn btn-sm btn-secondary" },

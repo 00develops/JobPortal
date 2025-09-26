@@ -90,9 +90,9 @@ const AddSubCategory = () => {
 
   return (
     <Container fluid className="pt-4">
-      <ComponentCard title="Add Sub Category">
+      <ComponentCard title="Add Sub Category" >
         {message && <Alert variant={variant}>{message}</Alert>}
-        <Form onSubmit={handleSubmit}>
+        <Form onSubmit={handleSubmit} className='py-2'>
           <Form.Group className="mb-3" controlId="subCategoryName">
             <Form.Label>
               Sub-Category Name <span className="text-danger">*</span>

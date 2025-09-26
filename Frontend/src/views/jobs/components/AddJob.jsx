@@ -15,7 +15,7 @@ const AddJob = () => {
     jobType: "",
     jobCategory: "",
     jobLocation: "",
-    payScale: "",
+    shotDescription: "",
     applicationStartDate: "",
     lastDateToApply: "",
     importantDates: [{ title: "", date: "" }],
@@ -105,13 +105,24 @@ const AddJob = () => {
         <Row>
           <Col md={4}>
             <Form.Group className="mb-2">
-              <Form.Label>Job Title / Post Name</Form.Label>
+              <Form.Label>Job Title </Form.Label>
               <Form.Control
                 type="text"
                 name="postName"
                 value={value.postName}
                 onChange={handleChange}
                 required
+              />
+            </Form.Group>
+          </Col>
+           <Col md={4}>
+            <Form.Group className="mb-2">
+              <Form.Label>Short Description</Form.Label>
+              <Form.Control
+                type="text"
+                name="shotDescription"
+                value={value.shotDescription}
+                onChange={handleChange}
               />
             </Form.Group>
           </Col>
@@ -139,8 +150,7 @@ const AddJob = () => {
               />
             </Form.Group>
           </Col>
-        </Row>
-        <Row>
+        
           <Col md={4}>
             <Form.Group className="mb-2">
               <Form.Label>Job Type</Form.Label>
@@ -174,19 +184,8 @@ const AddJob = () => {
               />
             </Form.Group>
           </Col>
-        </Row>
-        <Row>
-          <Col md={4}>
-            <Form.Group className="mb-2">
-              <Form.Label>Pay Scale / Salary</Form.Label>
-              <Form.Control
-                type="text"
-                name="payScale"
-                value={value.payScale}
-                onChange={handleChange}
-              />
-            </Form.Group>
-          </Col>
+       
+         
           <Col md={4}>
             <Form.Group className="mb-2">
               <Form.Label>Application Start Date</Form.Label>
@@ -238,10 +237,10 @@ const AddJob = () => {
                 />
               </Form.Group>
             </Col>
-            <Col md={2} className="d-flex gap-2">
-              <Button variant="primary" size="sm" onClick={addImportantDate}>+</Button>
+            <Col md={1} className="d-flex justify-content-center align-items-left">
+              <Button  className="me-2 btn-icon btn btn-primary sm "  onClick={addImportantDate}>+</Button>
               {value.importantDates.length > 1 && (
-                <Button variant="danger" size="sm" onClick={() => deleteImportantDate(idx)}>-</Button>
+                <Button  className="me-2 btn-icon btn btn-light sm "  onClick={() => deleteImportantDate(idx)}>-</Button>
               )}
             </Col>
           </Row>
@@ -296,7 +295,7 @@ const AddJob = () => {
       ))}
 
       {/* -------------------- Meta Details -------------------- */}
-      <ComponentCard title="Meta Details" isCollapsible defaultOpen>
+      <ComponentCard title="Meta Details" className="py-1" isCollapsible defaultOpen>
         <Row>
           <Col md={4}>
             <Form.Group className="mb-2">

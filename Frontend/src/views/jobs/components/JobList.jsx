@@ -95,7 +95,7 @@ const JobList = () => {
   ];
 
   return (
-    <Container fluid>
+    <Container fluid className="py-3">
       <Row>
         <Col>
           {message && <Alert variant={variant}>{message}</Alert>}

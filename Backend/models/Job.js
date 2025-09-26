@@ -27,7 +27,7 @@ const JobSchema = new mongoose.Schema(
     jobType: { type: String, default: "", trim: true },
     jobCategory: { type: String, default: "", trim: true },
     jobLocation: { type: String, default: "", trim: true },
-    payScale: { type: String, default: "", trim: true },
+    shotDescription: { type: String, default: "", trim: true },
     applicationStartDate: { type: Date },
     lastDateToApply: { type: Date },
 

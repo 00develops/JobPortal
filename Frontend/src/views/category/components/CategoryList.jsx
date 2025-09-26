@@ -116,7 +116,7 @@ const CategoryList = () => {
   ];
 
   return (
-    <Container fluid className="pt-4">
+    <Container fluid className="py-3">
       {message && <Alert variant={variant}>{message}</Alert>}
 
       {loading ? (

@@ -16,7 +16,7 @@ const EditJob = () => {
     jobType: "",
     jobCategory: "",
     jobLocation: "",
-    payScale: "",
+    shotDescription: "",
     applicationStartDate: "",
     lastDateToApply: "",
     importantDates: [{ title: "", date: "" }],
@@ -55,6 +55,8 @@ const EditJob = () => {
           if (!data[key].richDescription) data[key].richDescription = "";
         });
 
+        if (!data.importantDates) data.importantDates = [{ title: "", date: "" }];
+
         setvalue(data);
       } catch (error) {
         console.error("Error fetching job data:", error);
@@ -65,15 +67,15 @@ const EditJob = () => {
   }, [id]);
 
   const handleChange = (e, section, field, index) => {
-    const { value } = e.target;
+    const inputValue = e.target.value;
     if (section === "importantDates") {
       const dates = [...value.importantDates];
-      dates[index][field] = value;
+      dates[index][field] = inputValue;
       setvalue({ ...value, importantDates: dates });
     } else if (section) {
-      setvalue({ ...value, [section]: { ...value[section], [field]: value } });
+      setvalue({ ...value, [section]: { ...value[section], [field]: inputValue } });
     } else {
-      setvalue({ ...value, [e.target.name]: value });
+      setvalue({ ...value, [e.target.name]: inputValue });
     }
   };
 
@@ -114,12 +116,18 @@ const EditJob = () => {
       <div className="mt-4 pb-2">
         {/* Basic Job Details */}
         <fieldset>
-          <ComponentCard title="Basic Job Details"  className="py-1" isCollapsible defaultOpen={false}>
+          <ComponentCard title="Basic Job Details" className="py-1" isCollapsible defaultOpen={false}>
             <Row>
               <Col md={4}>
                 <Form.Group className="mb-2">
-                  <Form.Label>Job Title / Post Name</Form.Label>
+                  <Form.Label>Job Title </Form.Label>
                   <Form.Control type="text" name="postName" value={value.postName} onChange={handleChange} required />
+                </Form.Group>
+              </Col>
+              <Col md={4}>
+                <Form.Group className="mb-2">
+                  <Form.Label>Short Description</Form.Label>
+                  <Form.Control type="text" name="shotDescription" value={value.shotDescription} onChange={handleChange} />
                 </Form.Group>
               </Col>
               <Col md={4}>
@@ -134,8 +142,7 @@ const EditJob = () => {
                   <Form.Control type="text" name="advtNumber" value={value.advtNumber} onChange={handleChange} required />
                 </Form.Group>
               </Col>
-            </Row>
-            <Row>
+            
               <Col md={4}>
                 <Form.Group className="mb-2">
                   <Form.Label>Job Type</Form.Label>
@@ -154,14 +161,8 @@ const EditJob = () => {
                   <Form.Control type="text" name="jobLocation" value={value.jobLocation} onChange={handleChange} />
                 </Form.Group>
               </Col>
-            </Row>
-            <Row>
-              <Col md={4}>
-                <Form.Group className="mb-2">
-                  <Form.Label>Pay Scale / Salary</Form.Label>
-                  <Form.Control type="text" name="payScale" value={value.payScale} onChange={handleChange} />
-                </Form.Group>
-              </Col>
+            
+              
               <Col md={4}>
                 <Form.Group className="mb-2">
                   <Form.Label>Application Start Date</Form.Label>
@@ -180,29 +181,43 @@ const EditJob = () => {
 
         {/* Important Dates */}
         <fieldset>
-          <ComponentCard title="Important Dates" isCollapsible   className="py-1" >
-          {value.importantDates.map((dateItem, idx) => (
-              <Row className="mb-2 align-items-end">
+          <ComponentCard title="Important Dates" isCollapsible className="py-1">
+            {value.importantDates?.map((dateItem, idx) => (
+              <Row key={idx} className="mb-2 align-items-end">
                 <Col md={5}>
                   <Form.Group>
                     <Form.Label>Title</Form.Label>
-                    <Form.Control type="text" value={dateItem.title} onChange={(e) => handleChange(e, "importantDates", "title", idx)} required />
+                    <Form.Control
+                      type="text"
+                      value={dateItem.title}
+                      onChange={(e) => handleChange(e, "importantDates", "title", idx)}
+                      required
+                    />
                   </Form.Group>
                 </Col>
                 <Col md={5}>
                   <Form.Group>
                     <Form.Label>Date</Form.Label>
-                    <Form.Control type="date" value={formatDateForInput(dateItem.date)} onChange={(e) => handleChange(e, "importantDates", "date", idx)} required />
+                    <Form.Control
+                      type="date"
+                      value={formatDateForInput(dateItem.date)}
+                      onChange={(e) => handleChange(e, "importantDates", "date", idx)}
+                      required
+                    />
                   </Form.Group>
                 </Col>
-                <Col md={2} className="d-flex justify-content-center align-item-left">
-                  <Button variant="" className="me-2 btn-icon btn btn-primary sm "  onClick={addImportantDate}>+</Button>
+                <Col md={2} className="d-flex justify-content-center align-items-start">
+                  <Button variant="primary" className="me-2 btn-icon btn-sm" onClick={addImportantDate}>
+                    +
+                  </Button>
                   {value.importantDates.length > 1 && (
-                    <Button className="btn-icon btn btn-primary sm" variant="" onClick={() => deleteImportantDate(idx)}>-</Button>
+                    <Button variant="light" className="btn-icon btn-sm" onClick={() => deleteImportantDate(idx)}>
+                      -
+                    </Button>
                   )}
                 </Col>
               </Row>
-          ))}
+            ))}
           </ComponentCard>
         </fieldset>
 
@@ -217,18 +232,26 @@ const EditJob = () => {
           { key: "howToApply", label: "How to Apply" },
         ].map((section) => (
           <fieldset key={section.key}>
-            <ComponentCard title={section.label}  className="py-1"  isCollapsible>
+            <ComponentCard title={section.label} className="py-1" isCollapsible>
               <Row>
                 <Col md={6}>
                   <Form.Group className="mb-2">
                     <Form.Label>Title</Form.Label>
-                    <Form.Control type="text" value={value[section.key].title || ""} onChange={(e) => handleChange(e, section.key, "title")} />
+                    <Form.Control
+                      type="text"
+                      value={value[section.key]?.title || ""}
+                      onChange={(e) => handleChange(e, section.key, "title")}
+                    />
                   </Form.Group>
                 </Col>
                 <Col md={6}>
                   <Form.Group className="mb-2">
                     <Form.Label>Description (Text Input)</Form.Label>
-                    <Form.Control type="text" value={value[section.key].description || ""} onChange={(e) => handleChange(e, section.key, "description")} />
+                    <Form.Control
+                      type="text"
+                      value={value[section.key]?.description || ""}
+                      onChange={(e) => handleChange(e, section.key, "description")}
+                    />
                   </Form.Group>
                 </Col>
               </Row>
@@ -238,7 +261,7 @@ const EditJob = () => {
                     <Form.Label>Description (Rich Text)</Form.Label>
                     <SnowEditor
                       key={section.key}
-                      initialValue={value[section.key].richDescription || ""}
+                      initialValue={value[section.key]?.richDescription || ""}
                       onChange={(content) => handleRichEditorChange(content, section.key)}
                     />
                   </Form.Group>
@@ -250,24 +273,36 @@ const EditJob = () => {
 
         {/* Meta Details */}
         <fieldset>
-          <ComponentCard title="Meta Details"  className="py-1"  isCollapsible>
+          <ComponentCard title="Meta Details" className="py-1" isCollapsible>
             <Row>
               <Col md={4}>
                 <Form.Group className="mb-2">
                   <Form.Label>Title</Form.Label>
-                  <Form.Control type="text" value={value.metaDetails.title || ""} onChange={(e) => handleChange(e, "metaDetails", "title")} />
+                  <Form.Control
+                    type="text"
+                    value={value.metaDetails?.title || ""}
+                    onChange={(e) => handleChange(e, "metaDetails", "title")}
+                  />
                 </Form.Group>
               </Col>
               <Col md={4}>
                 <Form.Group className="mb-2">
                   <Form.Label>Keywords</Form.Label>
-                  <Form.Control type="text" value={value.metaDetails.keywords || ""} onChange={(e) => handleChange(e, "metaDetails", "keywords")} />
+                  <Form.Control
+                    type="text"
+                    value={value.metaDetails?.keywords || ""}
+                    onChange={(e) => handleChange(e, "metaDetails", "keywords")}
+                  />
                 </Form.Group>
               </Col>
               <Col md={4}>
                 <Form.Group className="mb-2">
                   <Form.Label>Description</Form.Label>
-                  <Form.Control type="text" value={value.metaDetails.description || ""} onChange={(e) => handleChange(e, "metaDetails", "description")} />
+                  <Form.Control
+                    type="text"
+                    value={value.metaDetails?.description || ""}
+                    onChange={(e) => handleChange(e, "metaDetails", "description")}
+                  />
                 </Form.Group>
               </Col>
             </Row>
@@ -275,14 +310,21 @@ const EditJob = () => {
               <Col md={12}>
                 <Form.Group className="mb-2">
                   <Form.Label>Schemas</Form.Label>
-                  <Form.Control as="textarea" rows={4} value={value.metaDetails.schemas || ""} onChange={(e) => handleChange(e, "metaDetails", "schemas")} />
+                  <Form.Control
+                    as="textarea"
+                    rows={4}
+                    value={value.metaDetails?.schemas || ""}
+                    onChange={(e) => handleChange(e, "metaDetails", "schemas")}
+                  />
                 </Form.Group>
               </Col>
             </Row>
           </ComponentCard>
         </fieldset>
 
-        <Button type="submit" variant="primary" className="text-right">Update Job</Button>
+        <Button type="submit" variant="primary" className="text-right">
+          Update Job
+        </Button>
       </div>
     </Form>
   );
