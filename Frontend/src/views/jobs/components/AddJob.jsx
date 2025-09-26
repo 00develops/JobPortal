@@ -1,353 +1,431 @@
-import { useState } from "react";
-import { Form, Button, Row, Col, Alert } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { useForm, useFieldArray, Controller } from "react-hook-form";
+import { Form, Button, Row, Col, Card, Table, Alert } from "react-bootstrap";
 import axios from "axios";
 import SnowEditor from "@/components/SnowEditor";
-import ComponentCard from "../../../components/ComponentCard";
+import { useNavigate } from "react-router-dom";
+import ComponentCard from "@/components/ComponentCard";
 
-const AddJob = () => {
+export default function AddJob() {
   const navigate = useNavigate();
 
-  const [value, setValue] = useState({
-    postName: "",
-    organization: "",
-    advtNumber: "",
-    jobType: "",
-    jobCategory: "",
-    jobLocation: "",
-    shotDescription: "",
-    applicationStartDate: "",
-    lastDateToApply: "",
-    importantDates: [{ title: "", date: "" }],
-    applicationFee: { title: "", description: "", richDescription: "" },
-    vacancyDetails: { title: "", description: "", richDescription: "" },
-    eligibilityCriteria: { title: "", description: "", richDescription: "" },
-    salaryBenefits: { title: "", description: "", richDescription: "" },
-    selectionProcess: { title: "", description: "", richDescription: "" },
-    importantLinks: { title: "", description: "", richDescription: "" },
-    howToApply: { title: "", description: "", richDescription: "" },
-    metaDetails: { title: "", description: "", keywords: "", schemas: "" },
-  });
+  const defaultValues = {
+    meta: { title: "", keywords: "", description: "", schemas: "" },
+    basic: {
+      jobTitle: "",
+      organization: "",
+      advtNumber: "",
+      jobType: "Permanent",
+      sector: "Central Govt",
+      jobCategory: "General",
+      jobLocation: "All India",
+      experience: "No/ Freshers",
+      modeOfExam: "Online",
+    },
+    dates: [
+      { label: "Application Start Date", date: "" },
+      { label: "Application End Date", date: "" },
+    ],
+    fees: [
+      { category: "General / UR", fee: 0 },
+      { category: "OBC", fee: 0 },
+      { category: "EWS", fee: 0 },
+      { category: "SC", fee: 0 },
+      { category: "ST", fee: 0 },
+      { category: "PwD", fee: 0 },
+      { category: "Female", fee: 0 },
+    ],
+    vacancies: [
+      { postName: "", total: 0, UR: 0, EWS: 0, OBC: 0, SC: 0, ST: 0, PwBD: 0 },
+    ],
+    eligibility: { qualification: "Graduate", ageMin: 0, ageMax: 0, extraRequirements: "" },
+    salary: { payScale: "", inHand: 0, allowances: "" },
+    selection: ["Shortlisting / Written Test", "Document Verification", "Medical / DV"],
+    links: [{ type: "Apply Online", label: "Apply Online", url: "" }],
+    howToApply: "",
+  };
 
+  const { register, control, handleSubmit, reset, formState: { errors } } = useForm({ defaultValues });
+
+  const { fields: dateFields, append: appendDate, remove: removeDate } = useFieldArray({ control, name: "dates" });
+  const { fields: feeFields, append: appendFee, remove: removeFee } = useFieldArray({ control, name: "fees" });
+  const { fields: vacancyFields, append: appendVacancy, remove: removeVacancy } = useFieldArray({ control, name: "vacancies" });
+  const { fields: selectionFields, append: appendSelection, remove: removeSelection } = useFieldArray({ control, name: "selection" });
+  const { fields: linkFields, append: appendLink, remove: removeLink } = useFieldArray({ control, name: "links" });
+
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [logoFile, setLogoFile] = useState(null);
   const [message, setMessage] = useState({ text: "", variant: "" });
 
-  // ------------------ Plain Text Input ------------------
-  const handleChange = (e, section, field, index) => {
-    const { name, value: inputValue } = e.target;
+  const onFilesPicked = (e) => setUploadedFiles((s) => [...s, ...Array.from(e.target.files)]);
+  const removeUploadedFile = (idx) => setUploadedFiles((s) => s.filter((_, i) => i !== idx));
+  const onLogoPicked = (e) => e.target.files[0] && setLogoFile(e.target.files[0]);
+  const removeLogo = () => setLogoFile(null);
 
-    if (section === "importantDates") {
-      const dates = [...value.importantDates];
-      dates[index][field] = inputValue;
-      setValue({ ...value, importantDates: dates });
-    } else if (section) {
-      setValue({
-        ...value,
-        [section]: { ...value[section], [field]: inputValue },
-      });
-    } else {
-      setValue({ ...value, [name]: inputValue });
-    }
-  };
-
-  // ------------------ Rich Text Editor Input ------------------
-  const handleRichEditorChange = (content, section) => {
-    setValue({
-      ...value,
-      [section]: { ...value[section], richDescription: content },
-    });
-  };
-
-  // ------------------ Important Dates ------------------
-  const addImportantDate = () => {
-    setValue({
-      ...value,
-      importantDates: [...value.importantDates, { title: "", date: "" }],
-    });
-  };
-
-  const deleteImportantDate = (index) => {
-    const dates = [...value.importantDates];
-    dates.splice(index, 1);
-    setValue({ ...value, importantDates: dates });
-  };
-
-  // ------------------ Submit Handler ------------------
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const onSubmit = async (data) => {
     try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/api/jobs`,
-        value
-      );
-      setMessage({ text: "Job submitted successfully!", variant: "success" });
-      setTimeout(() => navigate("/admin/jobs"), 1500);
-      console.log(response.data);
+      const formData = new FormData();
+
+      const jobPayload = {
+        advtNumber: data.basic.advtNumber,
+        postName: data.basic.jobTitle,
+        organization: data.basic.organization,
+        jobType: data.basic.jobType,
+        sector: data.basic.sector,
+        jobCategory: data.basic.jobCategory,
+        jobLocation: data.basic.jobLocation,
+        experience: data.basic.experience,
+        modeOfExam: data.basic.modeOfExam,
+        dates: data.dates,
+        fees: data.fees,
+        vacancies: data.vacancies,
+        eligibility: data.eligibility,
+        salary: data.salary,
+        selection: data.selection,
+        links: data.links,
+        howToApply: data.howToApply,
+        meta: data.meta,
+      };
+
+      formData.append("jobData", JSON.stringify(jobPayload));
+      uploadedFiles.forEach((file) => formData.append("files", file));
+      if (logoFile) formData.append("logo", logoFile);
+
+      await axios.post(`${import.meta.env.VITE_BASE_URL}/api/jobs`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      reset();
+      setUploadedFiles([]);
+      setLogoFile(null);
+      setMessage({ text: "Job saved successfully!", variant: "success" });
+      setTimeout(() => navigate("/admin/jobs"), 1000);
     } catch (error) {
-      console.error("Error submitting job:", error);
-      setMessage({ text: "Failed to submit job.", variant: "danger" });
+      console.error("Axios Error:", error.response?.data || error.message);
+      setMessage({ text: "Error saving job. Check console for details.", variant: "danger" });
     }
   };
 
-  return ( 
-    <Form onSubmit={handleSubmit} className="pt-4 pb-2">
-      {message.text && (
-        <Alert
-          variant={message.variant}
-          onClose={() => setMessage({ text: "", variant: "" })}
-          dismissible
-        >
-          {message.text}
-        </Alert>
-      )}
+  return (
+    <div className="mb-4 pt-4">
+      <Card.Body>
+        {message.text && (
+          <Alert variant={message.variant} onClose={() => setMessage({ text: "", variant: "" })} dismissible>
+            {message.text}
+          </Alert>
+        )}
 
-      {/* -------------------- Basic Job Details -------------------- */}
-      <ComponentCard title="Basic Job Details" className="py-1" isCollapsible defaultOpen={false}>
-        <Row>
-          <Col md={4}>
-            <Form.Group className="mb-2">
-              <Form.Label>Job Title </Form.Label>
-              <Form.Control
-                type="text"
-                name="postName"
-                value={value.postName}
-                onChange={handleChange}
-                required
-              />
-            </Form.Group>
-          </Col>
-           <Col md={4}>
-            <Form.Group className="mb-2">
-              <Form.Label>Short Description</Form.Label>
-              <Form.Control
-                type="text"
-                name="shotDescription"
-                value={value.shotDescription}
-                onChange={handleChange}
-              />
-            </Form.Group>
-          </Col>
-          <Col md={4}>
-            <Form.Group className="mb-2">
-              <Form.Label>Organization / Department</Form.Label>
-              <Form.Control
-                type="text"
-                name="organization"
-                value={value.organization}
-                onChange={handleChange}
-                required
-              />
-            </Form.Group>
-          </Col>
-          <Col md={4}>
-            <Form.Group className="mb-2">
-              <Form.Label>Advt. Number / Reference ID</Form.Label>
-              <Form.Control
-                type="text"
-                name="advtNumber"
-                value={value.advtNumber}
-                onChange={handleChange}
-                required
-              />
-            </Form.Group>
-          </Col>
-        
-          <Col md={4}>
-            <Form.Group className="mb-2">
-              <Form.Label>Job Type</Form.Label>
-              <Form.Control
-                type="text"
-                name="jobType"
-                value={value.jobType}
-                onChange={handleChange}
-              />
-            </Form.Group>
-          </Col>
-          <Col md={4}>
-            <Form.Group className="mb-2">
-              <Form.Label>Category of Job</Form.Label>
-              <Form.Control
-                type="text"
-                name="jobCategory"
-                value={value.jobCategory}
-                onChange={handleChange}
-              />
-            </Form.Group>
-          </Col>
-          <Col md={4}>
-            <Form.Group className="mb-2">
-              <Form.Label>Job Location</Form.Label>
-              <Form.Control
-                type="text"
-                name="jobLocation"
-                value={value.jobLocation}
-                onChange={handleChange}
-              />
-            </Form.Group>
-          </Col>
-       
-         
-          <Col md={4}>
-            <Form.Group className="mb-2">
-              <Form.Label>Application Start Date</Form.Label>
-              <Form.Control
-                type="date"
-                name="applicationStartDate"
-                value={value.applicationStartDate?.split("T")[0] || ""}
-                onChange={handleChange}
-              />
-            </Form.Group>
-          </Col>
-          <Col md={4}>
-            <Form.Group className="mb-2">
-              <Form.Label>Last Date to Apply</Form.Label>
-              <Form.Control
-                type="date"
-                name="lastDateToApply"
-                value={value.lastDateToApply?.split("T")[0] || ""}
-                onChange={handleChange}
-              />
-            </Form.Group>
-          </Col>
-        </Row>
-      </ComponentCard>
+        <Form onSubmit={handleSubmit(onSubmit)}>
 
-      {/* -------------------- Important Dates -------------------- */}
-      <ComponentCard title="Important Dates" className="py-1" isCollapsible defaultOpen>
-        {value.importantDates.map((dateItem, idx) => (
-          <Row className="mb-2 align-items-end" key={idx}>
-            <Col md={5}>
-              <Form.Group>
-                <Form.Label>Title</Form.Label>
-                <Form.Control
-                  type="text"
-                  value={dateItem.title}
-                  onChange={(e) => handleChange(e, "importantDates", "title", idx)}
-                  required
-                />
-              </Form.Group>
-            </Col>
-            <Col md={5}>
-              <Form.Group>
-                <Form.Label>Date</Form.Label>
-                <Form.Control
-                  type="date"
-                  value={dateItem.date}
-                  onChange={(e) => handleChange(e, "importantDates", "date", idx)}
-                  required
-                />
-              </Form.Group>
-            </Col>
-            <Col md={1} className="d-flex justify-content-center align-items-left">
-              <Button  className="me-2 btn-icon btn btn-primary sm "  onClick={addImportantDate}>+</Button>
-              {value.importantDates.length > 1 && (
-                <Button  className="me-2 btn-icon btn btn-light sm "  onClick={() => deleteImportantDate(idx)}>-</Button>
-              )}
-            </Col>
-          </Row>
-        ))}
-      </ComponentCard>
+          {/* SEO & Meta Info */}
+          <ComponentCard className="mb-3" title="SEO & Meta Info" isCollapsible defaultOpen={false}>
+            <Card.Body>
+              <Row>
+                <Col>
+                  {["title", "keywords", "description", "schemas"].map((field) => (
+                    <Form.Group key={field} className="mb-2">
+                      <Form.Label className="fw-bold">
+                        {`Meta ${field.charAt(0).toUpperCase() + field.slice(1)}`} <span className="text-danger">*</span>
+                      </Form.Label>
+                      <Form.Control {...register(`meta.${field}`, { required: `Meta ${field} is required` })} />
+                      {errors.meta?.[field] && <Form.Text className="text-danger">{errors.meta[field].message}</Form.Text>}
+                    </Form.Group>
+                  ))}
+                </Col>
+              </Row>
+            </Card.Body>
+          </ComponentCard>
 
-      {/* -------------------- Sections with Text + Rich Text -------------------- */}
-      {[
-        { key: "applicationFee", label: "Application Fee" },
-        { key: "vacancyDetails", label: "Vacancy Details" },
-        { key: "eligibilityCriteria", label: "Eligibility Criteria" },
-        { key: "salaryBenefits", label: "Salary & Benefits" },
-        { key: "selectionProcess", label: "Selection Process" },
-        { key: "importantLinks", label: "Important Links" },
-        { key: "howToApply", label: "How to Apply" },
-      ].map((section) => (
-        <ComponentCard key={section.key} title={section.label} className="py-1" isCollapsible defaultOpen>
-          <Row>
-            <Col md={6}>
+          {/* Basic Job Details */}
+          <ComponentCard className="mb-3" title="Basic Job Details" isCollapsible defaultOpen>
+            <Card.Body>
+              <Row>
+                {[
+                  { name: "jobTitle", label: "Post Name" },
+                  { name: "organization", label: "Organization" },
+                  { name: "advtNumber", label: "Advt No." },
+                ].map((field) => (
+                  <Col md={4} key={field.name}>
+                    <Form.Group className="mb-2">
+                      <Form.Label>{field.label} <span className="text-danger">*</span></Form.Label>
+                      <Form.Control {...register(`basic.${field.name}`, { required: `${field.label} is required` })} />
+                      {errors.basic?.[field.name] && <Form.Text className="text-danger">{errors.basic[field.name].message}</Form.Text>}
+                    </Form.Group>
+                  </Col>
+                ))}
+                <Col md={4}>
+                  <Form.Group className="mb-2">
+                    <Form.Label>Job Type <span className="text-danger">*</span></Form.Label>
+                    <Form.Select {...register("basic.jobType", { required: "Job Type is required" })}>
+                      <option>Permanent</option>
+                      <option>Contract</option>
+                      <option>Apprentice</option>
+                    </Form.Select>
+                    {errors.basic?.jobType && <Form.Text className="text-danger">{errors.basic.jobType.message}</Form.Text>}
+                  </Form.Group>
+                </Col>
+                <Col md={4}>
+                  <Form.Group className="mb-2">
+                    <Form.Label>Sector <span className="text-danger">*</span></Form.Label>
+                    <Form.Select {...register("basic.sector", { required: "Sector is required" })}>
+                      <option>Central Govt</option>
+                      <option>State Govt</option>
+                      <option>PSU</option>
+                    </Form.Select>
+                    {errors.basic?.sector && <Form.Text className="text-danger">{errors.basic.sector.message}</Form.Text>}
+                  </Form.Group>
+                </Col>
+              </Row>
+            </Card.Body>
+          </ComponentCard>
+
+          {/* Important Dates */}
+          <ComponentCard className="mb-3" title="Important Dates" isCollapsible defaultOpen>
+            <Card.Body>
+              <Table bordered size="sm">
+                <thead>
+                  <tr>
+                    <th>Label</th>
+                    <th>Date</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dateFields.map((field, idx) => (
+                    <tr key={field.id}>
+                      <td>
+                        <Form.Control {...register(`dates.${idx}.label`, { required: "Label is required" })} />
+                        {errors.dates?.[idx]?.label && <Form.Text className="text-danger">{errors.dates[idx].label.message}</Form.Text>}
+                      </td>
+                      <td>
+                        <Form.Control type="date" {...register(`dates.${idx}.date`, { required: "Date is required" })} />
+                        {errors.dates?.[idx]?.date && <Form.Text className="text-danger">{errors.dates[idx].date.message}</Form.Text>}
+                      </td>
+                      <td><Button size="sm" variant="danger" onClick={() => removeDate(idx)}>Remove</Button></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+              <Button size="sm" onClick={() => appendDate({ label: "New Date", date: "" })}>+ Add Date</Button>
+            </Card.Body>
+          </ComponentCard>
+
+          {/* Application Fee */}
+          <ComponentCard className="mb-3" title="Application Fee" isCollapsible defaultOpen>
+            <Card.Body>
+              <Table bordered size="sm">
+                <thead>
+                  <tr>
+                    <th>Category</th>
+                    <th>Fee</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {feeFields.map((f, idx) => (
+                    <tr key={f.id}>
+                      <td>
+                        <Form.Control {...register(`fees.${idx}.category`, { required: "Category is required" })} />
+                        {errors.fees?.[idx]?.category && <Form.Text className="text-danger">{errors.fees[idx].category.message}</Form.Text>}
+                      </td>
+                      <td>
+                        <Form.Control type="number" {...register(`fees.${idx}.fee`, { required: "Fee is required", valueAsNumber: true, min: { value: 0, message: "Fee must be >= 0" } })} />
+                        {errors.fees?.[idx]?.fee && <Form.Text className="text-danger">{errors.fees[idx].fee.message}</Form.Text>}
+                      </td>
+                      <td><Button size="sm" variant="danger" onClick={() => removeFee(idx)}>Remove</Button></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+              <Button size="sm" onClick={() => appendFee({ category: "Other", fee: 0 })}>+ Add Category</Button>
+            </Card.Body>
+          </ComponentCard>
+
+          {/* Vacancies */}
+          <ComponentCard className="mb-3" title="Vacancy Details" isCollapsible defaultOpen>
+            <Card.Body>
+              <Table bordered size="sm">
+                <thead>
+                  <tr>
+                    <th>Post</th><th>Total</th><th>UR</th><th>EWS</th><th>OBC</th><th>SC</th><th>ST</th><th>PwBD</th><th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {vacancyFields.map((v, idx) => (
+                    <tr key={v.id}>
+                      <td>
+                        <Form.Control {...register(`vacancies.${idx}.postName`, { required: "Post Name is required" })} />
+                        {errors.vacancies?.[idx]?.postName && <Form.Text className="text-danger">{errors.vacancies[idx].postName.message}</Form.Text>}
+                      </td>
+                      <td>
+                        <Form.Control type="number" {...register(`vacancies.${idx}.total`, { required: "Total is required", valueAsNumber: true, min: { value: 0, message: "Value must be >= 0" } })} />
+                        {errors.vacancies?.[idx]?.total && <Form.Text className="text-danger">{errors.vacancies[idx].total.message}</Form.Text>}
+                      </td>
+                      <td><Form.Control type="number" {...register(`vacancies.${idx}.UR`, { valueAsNumber: true, min: 0 })} /></td>
+                      <td><Form.Control type="number" {...register(`vacancies.${idx}.EWS`, { valueAsNumber: true, min: 0 })} /></td>
+                      <td><Form.Control type="number" {...register(`vacancies.${idx}.OBC`, { valueAsNumber: true, min: 0 })} /></td>
+                      <td><Form.Control type="number" {...register(`vacancies.${idx}.SC`, { valueAsNumber: true, min: 0 })} /></td>
+                      <td><Form.Control type="number" {...register(`vacancies.${idx}.ST`, { valueAsNumber: true, min: 0 })} /></td>
+                      <td><Form.Control type="number" {...register(`vacancies.${idx}.PwBD`, { valueAsNumber: true, min: 0 })} /></td>
+                      <td><Button size="sm" variant="danger" onClick={() => removeVacancy(idx)}>Remove</Button></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+              <Button size="sm" onClick={() => appendVacancy({ postName: "", total: 0 })}>+ Add Vacancy</Button>
+            </Card.Body>
+          </ComponentCard>
+
+          {/* Eligibility */}
+          <ComponentCard className="mb-3" title="Eligibility Criteria" isCollapsible defaultOpen>
+            <Card.Body>
+              <Row>
+                <Col md={4}>
+                  <Form.Group className="mb-2">
+                    <Form.Label>Qualification <span className="text-danger">*</span></Form.Label>
+                    <Form.Select {...register("eligibility.qualification", { required: "Qualification is required" })}>
+                      <option>10th</option>
+                      <option>12th</option>
+                      <option>Graduate</option>
+                    </Form.Select>
+                    {errors.eligibility?.qualification && <Form.Text className="text-danger">{errors.eligibility.qualification.message}</Form.Text>}
+                  </Form.Group>
+                </Col>
+                <Col md={4}>
+                  <Form.Group className="mb-2">
+                    <Form.Label>Age Min <span className="text-danger">*</span></Form.Label>
+                    <Form.Control type="number" {...register("eligibility.ageMin", { required: "Minimum age is required", valueAsNumber: true, min: 0 })} />
+                    {errors.eligibility?.ageMin && <Form.Text className="text-danger">{errors.eligibility.ageMin.message}</Form.Text>}
+                  </Form.Group>
+                </Col>
+                <Col md={4}>
+                  <Form.Group className="mb-2">
+                    <Form.Label>Age Max <span className="text-danger">*</span></Form.Label>
+                    <Form.Control type="number" {...register("eligibility.ageMax", { required: "Maximum age is required", valueAsNumber: true, min: 0 })} />
+                    {errors.eligibility?.ageMax && <Form.Text className="text-danger">{errors.eligibility.ageMax.message}</Form.Text>}
+                  </Form.Group>
+                </Col>
+              </Row>
               <Form.Group className="mb-2">
-                <Form.Label>Title</Form.Label>
-                <Form.Control
-                  type="text"
-                  value={value[section.key].title || ""}
-                  onChange={(e) => handleChange(e, section.key, "title")}
+                <Form.Label>Extra Requirements</Form.Label>
+                <Controller
+                  control={control}
+                  name="eligibility.extraRequirements"
+                  render={({ field }) => <SnowEditor value={field.value} onChange={field.onChange} />}
                 />
               </Form.Group>
-            </Col>
-            <Col md={6}>
-              <Form.Group className="mb-2">
-                <Form.Label>Description (Text Input)</Form.Label>
-                <Form.Control
-                  type="text"
-                  value={value[section.key].description || ""}
-                  onChange={(e) => handleChange(e, section.key, "description")}
-                />
-              </Form.Group>
-            </Col>
-          </Row>
-          <Row>
-            <Col md={12}>
-              <Form.Group className="mb-2">
-                <Form.Label>Description (Rich Text)</Form.Label>
-                <SnowEditor
-                  value={value[section.key].richDescription || ""}
-                  onChange={(content) => handleRichEditorChange(content, section.key)}
-                />
-              </Form.Group>
-            </Col>
-          </Row>
-        </ComponentCard>
-      ))}
+            </Card.Body>
+          </ComponentCard>
 
-      {/* -------------------- Meta Details -------------------- */}
-      <ComponentCard title="Meta Details" className="py-1" isCollapsible defaultOpen>
-        <Row>
-          <Col md={4}>
-            <Form.Group className="mb-2">
-              <Form.Label>Title</Form.Label>
-              <Form.Control
-                type="text"
-                value={value.metaDetails.title || ""}
-                onChange={(e) => handleChange(e, "metaDetails", "title")}
-              />
-            </Form.Group>
-          </Col>
-          <Col md={4}>
-            <Form.Group className="mb-2">
-              <Form.Label>Keywords</Form.Label>
-              <Form.Control
-                type="text"
-                value={value.metaDetails.keywords || ""}
-                onChange={(e) => handleChange(e, "metaDetails", "keywords")}
-              />
-            </Form.Group>
-          </Col>
-          <Col md={4}>
-            <Form.Group className="mb-2">
-              <Form.Label>Description</Form.Label>
-              <Form.Control
-                type="text"
-                value={value.metaDetails.description || ""}
-                onChange={(e) => handleChange(e, "metaDetails", "description")}
-              />
-            </Form.Group>
-          </Col>
-        </Row>
-        <Row>
-          <Col md={12}>
-            <Form.Group className="mb-2">
-              <Form.Label>Schemas</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={4}
-                value={value.metaDetails.schemas || ""}
-                onChange={(e) => handleChange(e, "metaDetails", "schemas")}
-              />
-            </Form.Group>
-          </Col>
-        </Row>
-      </ComponentCard>
+          {/* Salary */}
+          <ComponentCard className="mb-3" title="Salary" isCollapsible defaultOpen>
+            <Card.Body>
+              <Row>
+                <Col md={4}>
+                  <Form.Group className="mb-2">
+                    <Form.Label>Pay Scale <span className="text-danger">*</span></Form.Label>
+                    <Form.Control {...register("salary.payScale", { required: "Pay Scale is required" })} />
+                    {errors.salary?.payScale && <Form.Text className="text-danger">{errors.salary.payScale.message}</Form.Text>}
+                  </Form.Group>
+                </Col>
+                <Col md={4}>
+                  <Form.Group className="mb-2">
+                    <Form.Label>In-hand <span className="text-danger">*</span></Form.Label>
+                    <Form.Control type="number" {...register("salary.inHand", { required: "In-hand salary is required", valueAsNumber: true, min: 0 })} />
+                    {errors.salary?.inHand && <Form.Text className="text-danger">{errors.salary.inHand.message}</Form.Text>}
+                  </Form.Group>
+                </Col>
+                <Col md={4}>
+                  <Form.Group className="mb-2">
+                    <Form.Label>Allowances <span className="text-danger">*</span></Form.Label>
+                    <Form.Control {...register("salary.allowances", { required: "Allowances are required" })} />
+                    {errors.salary?.allowances && <Form.Text className="text-danger">{errors.salary.allowances.message}</Form.Text>}
+                  </Form.Group>
+                </Col>
+              </Row>
+            </Card.Body>
+          </ComponentCard>
 
-      <Button type="submit" variant="primary" className="mt-3">
-        Submit Job
-      </Button>
-    </Form>
+          {/* Selection Process */}
+          <ComponentCard className="mb-3" title="Selection Process" isCollapsible defaultOpen>
+            <Card.Body>
+              {selectionFields.map((s, idx) => (
+                <Row key={idx} className="mb-2">
+                  <Col md={10}>
+                    <Form.Control {...register(`selection.${idx}`, { required: "Selection step is required" })} />
+                    {errors.selection?.[idx] && <Form.Text className="text-danger">{errors.selection[idx].message}</Form.Text>}
+                  </Col>
+                  <Col md={2}>
+                    <Button size="sm" variant="danger" onClick={() => removeSelection(idx)}>Remove</Button>
+                  </Col>
+                </Row>
+              ))}
+              <Button size="sm" onClick={() => appendSelection("")}>+ Add Step</Button>
+            </Card.Body>
+          </ComponentCard>
+
+          {/* Links */}
+          <ComponentCard className="mb-3" title="Links" isCollapsible defaultOpen>
+            <Card.Body>
+              {linkFields.map((l, idx) => (
+                <Row key={l.id} className="mb-2">
+                  <Col md={3}>
+                    <Form.Control {...register(`links.${idx}.type`, { required: "Type is required" })} placeholder="Type" />
+                    {errors.links?.[idx]?.type && <Form.Text className="text-danger">{errors.links[idx].type.message}</Form.Text>}
+                  </Col>
+                  <Col md={3}>
+                    <Form.Control {...register(`links.${idx}.label`, { required: "Label is required" })} placeholder="Label" />
+                    {errors.links?.[idx]?.label && <Form.Text className="text-danger">{errors.links[idx].label.message}</Form.Text>}
+                  </Col>
+                  <Col md={4}>
+                    <Form.Control {...register(`links.${idx}.url`, { required: "URL is required" })} placeholder="URL" />
+                    {errors.links?.[idx]?.url && <Form.Text className="text-danger">{errors.links[idx].url.message}</Form.Text>}
+                  </Col>
+                  <Col md={2}>
+                    <Button size="sm" variant="danger" onClick={() => removeLink(idx)}>Remove</Button>
+                  </Col>
+                </Row>
+              ))}
+              <Button size="sm" onClick={() => appendLink({ type: "", label: "", url: "" })}>+ Add Link</Button>
+            </Card.Body>
+          </ComponentCard>
+
+          {/* How To Apply */}
+          <ComponentCard className="mb-3" title="How To Apply" isCollapsible defaultOpen>
+            <Card.Body>
+              <Controller
+                control={control}
+                name="howToApply"
+                rules={{ required: "How to apply is required" }}
+                render={({ field }) => <SnowEditor value={field.value} onChange={field.onChange} />}
+              />
+              {errors.howToApply && <Form.Text className="text-danger">{errors.howToApply.message}</Form.Text>}
+            </Card.Body>
+          </ComponentCard>
+
+          {/* Files */}
+          <ComponentCard className="mb-3" title="Upload Files / Logo" isCollapsible defaultOpen>
+            <Card.Body>
+              <Form.Group className="mb-2">
+                <Form.Label>Job Logo</Form.Label>
+                <Form.Control type="file" accept="image/*" onChange={onLogoPicked} />
+                {logoFile && <div className="mt-1">{logoFile.name} <Button size="sm" variant="danger" onClick={removeLogo}>Remove</Button></div>}
+              </Form.Group>
+              <Form.Group className="mb-2">
+                <Form.Label>Other Files</Form.Label>
+                <Form.Control type="file" multiple onChange={onFilesPicked} />
+                {uploadedFiles.map((file, idx) => (
+                  <div key={idx} className="mt-1">{file.name} <Button size="sm" variant="danger" onClick={() => removeUploadedFile(idx)}>Remove</Button></div>
+                ))}
+              </Form.Group>
+            </Card.Body>
+          </ComponentCard>
+
+          <div className="text-end">
+            <Button type="submit">Save Job</Button>
+          </div>
+        </Form>
+      </Card.Body>
+    </div>
   );
-};
-
-export default AddJob;
+}

@@ -10,26 +10,25 @@ const categoryRoutes = require("./routes/categoryRoutes");
 const subcategoryRoutes = require("./routes/subcategoryRoutes");
 const jobRoutes = require("./routes/jobRoutes");
 
-
-
 const app = express();
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json()); // parse JSON
 app.use(express.urlencoded({ extended: true })); // parse form data
-app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // serve static uploads
 
-// Connect to DB
+// Serve uploaded files
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// Connect to MongoDB
 connectDB();
 
-// Routes
+// API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api", protectedRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/subcategories", subcategoryRoutes);
 app.use("/api/jobs", jobRoutes);
-
 
 // Test route
 app.get("/", (req, res) => {

@@ -1,28 +1,43 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Container, Row, Col, Dropdown, Alert } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
-import { createRoot } from "react-dom/client";
-import axios from "axios";
-import { TbDotsVertical, TbEdit, TbEye, TbTrash } from "react-icons/tb";
+import { Container, Row, Col, Dropdown, Alert, Spinner } from "react-bootstrap";
 import TableList from "@/components/table/TableList";
+import { createRoot } from "react-dom/client";
+import { useNavigate } from "react-router-dom";
+import ReactDOMServer from "react-dom/server";
+import {
+  TbDotsVertical,
+  TbEdit,
+  TbTrash,
+  TbChevronLeft,
+  TbChevronRight,
+  TbChevronsLeft,
+  TbChevronsRight,
+} from "react-icons/tb";
 
 const JobList = () => {
   const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [variant, setVariant] = useState("success");
   const navigate = useNavigate();
   const tableRef = useRef(null);
 
-  // Fetch all jobs
+  const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:5000";
+
+  // Fetch jobs
   const fetchJobs = async () => {
+    setLoading(true);
     try {
-      const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/jobs`);
-      setJobs(res.data || []);
+      const res = await fetch(`${BASE_URL}/api/jobs`);
+      const data = await res.json();
+      setJobs(Array.isArray(data) ? data : data.data || []);
     } catch (err) {
-      console.error("Fetch jobs error:", err);
+      console.error(err);
       setJobs([]);
       setMessage("Failed to fetch jobs.");
       setVariant("danger");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -30,35 +45,17 @@ const JobList = () => {
     fetchJobs();
   }, []);
 
-  // Delete job
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this job?")) return;
-    try {
-      await axios.delete(`${import.meta.env.VITE_BASE_URL}/api/jobs/${id}`);
-      setMessage("Job deleted successfully.");
-      setVariant("success");
-      setJobs((prev) => prev.filter((job) => job._id !== id)); // remove locally
-    } catch (err) {
-      console.error(err);
-      setMessage(err.response?.data?.message || "Failed to delete job.");
-      setVariant("danger");
-    }
-  };
-
-  // Define DataTable columns (Basic Job Details only)
   const columns = [
     { title: "Post Name", data: "postName" },
-    { title: "Organization / Department", data: "organization" },
+    { title: "Organization", data: "organization" },
     { title: "Job Type", data: "jobType" },
-    { title: "Job Category", data: "jobCategory" },
-    { title: "Job Location", data: "jobLocation" },
-    { title: "Pay Scale", data: "payScale" },
+    { title: "Category", data: "jobCategory" },
+    { title: "Location", data: "jobLocation" },
     {
       title: "Actions",
       data: null,
       orderable: false,
       createdCell: (td, cellData, rowData) => {
-        // Clear previous content
         td.innerHTML = "";
         const root = createRoot(td);
         root.render(
@@ -69,21 +66,33 @@ const JobList = () => {
             <Dropdown.Menu>
               <Dropdown.Item
                 onClick={() =>
-                  navigate(`/admin/jobs/view/${rowData._id}`, { state: rowData })
+                  navigate(`/admin/jobs/view/${rowData._id || rowData.id}`, { state: rowData })
                 }
               >
-                <TbEye className="me-1" /> View
+                <TbEdit className="me-1" /> View
               </Dropdown.Item>
               <Dropdown.Item
                 onClick={() =>
-                  navigate(`/admin/jobs/edit/${rowData._id}`, { state: rowData })
+                  navigate(`/admin/jobs/edit/${rowData._id || rowData.id}`, { state: rowData })
                 }
               >
                 <TbEdit className="me-1" /> Edit
               </Dropdown.Item>
               <Dropdown.Item
                 className="text-danger"
-                onClick={() => handleDelete(rowData._id)}
+                onClick={async () => {
+                  if (!window.confirm("Are you sure you want to delete this job?")) return;
+                  try {
+                    await fetch(`${BASE_URL}/api/jobs/${rowData._id || rowData.id}`, { method: "DELETE" });
+                    setMessage("Job deleted successfully!");
+                    setVariant("success");
+                    fetchJobs();
+                  } catch (err) {
+                    console.error(err);
+                    setMessage("Failed to delete job");
+                    setVariant("danger");
+                  }
+                }}
               >
                 <TbTrash className="me-1" /> Delete
               </Dropdown.Item>
@@ -96,34 +105,46 @@ const JobList = () => {
 
   return (
     <Container fluid className="py-3">
-      <Row>
-        <Col>
-          {message && <Alert variant={variant}>{message}</Alert>}
+      {message && <Alert variant={variant} onClose={() => setMessage("")} dismissible>{message}</Alert>}
 
-          <TableList
-            ref={tableRef}
-            data={jobs}
-            columns={columns}
-            options={{
-              responsive: true,
-              pageLength: 10,
-              destroy: true, // re-init table when jobs change
-              dom:
-                "<'d-md-flex justify-content-between align-items-center my-2'<'dropdown'B>f>" +
-                "rt" +
-                "<'d-md-flex justify-content-between align-items-center mt-2'ip>",
-              buttons: [
-                { extend: "copyHtml5", className: "btn btn-sm btn-secondary" },
-                { extend: "csvHtml5", className: "btn btn-sm btn-secondary" },
-                { extend: "excelHtml5", className: "btn btn-sm btn-secondary" },
-                { extend: "pdfHtml5", className: "btn btn-sm btn-secondary" },
-              ],
-              searching: true,
-            }}
-            className="table table-striped dt-responsive w-100"
-          />
-        </Col>
-      </Row>
+      {loading ? (
+        <div className="text-center py-4">
+          <Spinner animation="border" />
+        </div>
+      ) : (
+        <Row>
+          <Col>
+            <TableList
+              ref={tableRef}
+              data={jobs}
+              columns={columns}
+              options={{
+                responsive: true,
+                dom:
+                  "<'d-md-flex justify-content-between align-items-center my-2'<'dt-buttons'B>f>" +
+                  "rt" +
+                  "<'d-md-flex justify-content-between align-items-center mt-2'ip>",
+                buttons: [
+                  { extend: "copyHtml5", className: "btn btn-sm btn-secondary" },
+                  { extend: "csvHtml5", className: "btn btn-sm btn-secondary" },
+                  { extend: "excelHtml5", className: "btn btn-sm btn-secondary" },
+                  { extend: "pdfHtml5", className: "btn btn-sm btn-secondary" },
+                ],
+                paging: true,
+                language: {
+                  paginate: {
+                    first: ReactDOMServer.renderToStaticMarkup(<TbChevronsLeft />),
+                    previous: ReactDOMServer.renderToStaticMarkup(<TbChevronLeft />),
+                    next: ReactDOMServer.renderToStaticMarkup(<TbChevronRight />),
+                    last: ReactDOMServer.renderToStaticMarkup(<TbChevronsRight />),
+                  },
+                },
+              }}
+              className="table table-striped dt-responsive w-100"
+            />
+          </Col>
+        </Row>
+      )}
     </Container>
   );
 };

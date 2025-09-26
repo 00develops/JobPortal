@@ -1,14 +1,37 @@
 const mongoose = require("mongoose");
 
+// Subschemas
 const ImportantDateSchema = new mongoose.Schema({
-  title: { type: String, required: true, trim: true },
+  label: { type: String, required: true, trim: true },
   date: { type: Date, required: true },
+});
+
+const FeeSchema = new mongoose.Schema({
+  category: { type: String, required: true, trim: true },
+  fee: { type: String, default: "" },
+});
+
+const VacancySchema = new mongoose.Schema({
+  postName: { type: String, required: true, trim: true },
+  total: { type: Number, default: 0 },
+  UR: { type: Number, default: 0 },
+  EWS: { type: Number, default: 0 },
+  OBC: { type: Number, default: 0 },
+  SC: { type: Number, default: 0 },
+  ST: { type: Number, default: 0 },
+  PwBD: { type: Number, default: 0 },
+});
+
+const LinkSchema = new mongoose.Schema({
+  type: { type: String, default: "Other", trim: true },
+  label: { type: String, default: "", trim: true },
+  url: { type: String, default: "", trim: true },
 });
 
 const SectionSchema = new mongoose.Schema({
   title: { type: String, default: "", trim: true },
   description: { type: String, default: "" },      // Plain text
-  richDescription: { type: String, default: "" },  // Rich text (HTML)
+  richDescription: { type: String, default: "" },  // HTML / Rich text
 });
 
 const MetaDetailsSchema = new mongoose.Schema({
@@ -18,6 +41,7 @@ const MetaDetailsSchema = new mongoose.Schema({
   schemas: { type: String, default: "" },
 });
 
+// Main Job Schema
 const JobSchema = new mongoose.Schema(
   {
     // Basic Job Details
@@ -25,26 +49,53 @@ const JobSchema = new mongoose.Schema(
     organization: { type: String, required: true, trim: true },
     advtNumber: { type: String, required: true, trim: true },
     jobType: { type: String, default: "", trim: true },
+    sector: { type: String, default: "", trim: true },
     jobCategory: { type: String, default: "", trim: true },
     jobLocation: { type: String, default: "", trim: true },
-    shotDescription: { type: String, default: "", trim: true },
-    applicationStartDate: { type: Date },
-    lastDateToApply: { type: Date },
+    experience: { type: String, default: "" },
+    modeOfExam: { type: String, default: "" },
+    shortDescription: { type: String, default: "" },
 
     // Important Dates
-    importantDates: {
-      type: [ImportantDateSchema],
-      default: [],
+    dates: { type: [ImportantDateSchema], default: [] },
+
+    // Application Fee
+    fees: { type: [FeeSchema], default: [] },
+
+    // Vacancies
+    vacancies: { type: [VacancySchema], default: [] },
+
+    // Eligibility
+    eligibility: {
+      qualification: { type: String, default: "Graduate" },
+      finalYearEligible: { type: Boolean, default: false },
+      ageMin: { type: Number },
+      ageMax: { type: Number },
+      ageRelaxation: { type: String, default: "" },
+      gateRequired: { type: Boolean, default: false },
+      gateCodes: { type: String, default: "" },
+      extraRequirements: { type: String, default: "" }, // Rich text
     },
 
-    // Sections (plain + rich descriptions)
-    applicationFee: { type: SectionSchema, default: () => ({}) },
-    vacancyDetails: { type: SectionSchema, default: () => ({}) },
-    eligibilityCriteria: { type: SectionSchema, default: () => ({}) },
-    salaryBenefits: { type: SectionSchema, default: () => ({}) },
-    selectionProcess: { type: SectionSchema, default: () => ({}) },
-    importantLinks: { type: SectionSchema, default: () => ({}) },
-    howToApply: { type: SectionSchema, default: () => ({}) },
+    // Salary
+    salary: {
+      payScale: { type: String, default: "" },
+      inHand: { type: String, default: "" },
+      allowances: { type: String, default: "" },
+    },
+
+    // Selection Process
+    selection: { type: [String], default: [] },
+
+    // Links
+    links: { type: [LinkSchema], default: [] },
+
+    // How to Apply
+    howToApply: { type: String, default: "" }, // Rich text
+
+    // Uploaded files / logo
+    files: { type: [String], default: [] }, // store file URLs / paths
+    logo: { type: String, default: "" },
 
     // Meta
     metaDetails: { type: MetaDetailsSchema, default: () => ({}) },

@@ -1,56 +1,107 @@
-const Job = require('../models/Job');
+const express = require('express');
+const router = express.Router();
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const mongoose = require('mongoose');
+const Job = require("../models/Job");
 
-// Create Job
+// ------------------ CREATE ------------------
 const createJob = async (req, res) => {
   try {
-    const job = new Job(req.body);
-    const savedJob = await job.save();
-    res.status(201).json(savedJob);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
+    // Parse job data from form-data
+    const jobData = JSON.parse(req.body.jobData);
+
+    // Handle uploaded files (PDFs)
+    const files = req.files?.files || [];
+    const logo = req.files?.logo ? req.files.logo[0] : null;
+
+    if (files.length) {
+      jobData.files = files.map(f =>
+        path.join("uploads", "jobs", path.basename(f.path))
+      );
+    }
+    if (logo) {
+      jobData.logo = path.join("uploads", "jobs", path.basename(logo.path));
+    }
+
+    // ✅ Ensure nested objects exist
+    jobData.meta = jobData.meta || { title: "", keywords: "", description: "" };
+    jobData.eligibility = jobData.eligibility || { extraRequirements: "" };
+    jobData.howToApply = jobData.howToApply || "";
+
+    const job = new Job(jobData);
+    await job.save();
+
+    res.status(201).json({ message: "Job created successfully", job });
+  } catch (error) {
+    console.error("❌ Create Job Error:", error);
+    res.status(400).json({ message: "Bad Request", error: error.message });
   }
 };
 
-// Get All Jobs
+// ------------------ READ ------------------
 const getJobs = async (req, res) => {
   try {
     const jobs = await Job.find().sort({ createdAt: -1 });
-    res.status(200).json(jobs);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.json(jobs);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching jobs", error: error.message });
   }
 };
 
-// Get Job by ID
 const getJobById = async (req, res) => {
   try {
     const job = await Job.findById(req.params.id);
     if (!job) return res.status(404).json({ message: "Job not found" });
-    res.status(200).json(job);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.json(job);
+  } catch (error) {
+    res.status(400).json({ message: "Invalid Job ID", error: error.message });
   }
 };
 
-// Update Job
+// ------------------ UPDATE ------------------
 const updateJob = async (req, res) => {
   try {
-    const job = await Job.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const updatedData = JSON.parse(req.body.jobData);
+
+    // Handle files
+    const files = req.files?.files || [];
+    const logo = req.files?.logo ? req.files.logo[0] : null;
+
+    if (files.length) {
+      updatedData.files = files.map(f =>
+        path.join("uploads", "jobs", path.basename(f.path))
+      );
+    }
+    if (logo) {
+      updatedData.logo = path.join("uploads", "jobs", path.basename(logo.path));
+    }
+
+    // Ensure nested objects exist
+    updatedData.meta = updatedData.meta || { title: "", keywords: "", description: "" };
+    updatedData.eligibility = updatedData.eligibility || { extraRequirements: "" };
+    updatedData.howToApply = updatedData.howToApply || "";
+
+    const job = await Job.findByIdAndUpdate(req.params.id, updatedData, { new: true });
+
     if (!job) return res.status(404).json({ message: "Job not found" });
-    res.status(200).json(job);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
+
+    res.json({ message: "Job updated successfully", job });
+  } catch (error) {
+    console.error("❌ Update Job Error:", error);
+    res.status(400).json({ message: "Bad Request", error: error.message });
   }
 };
 
-// Delete Job
+// ------------------ DELETE ------------------
 const deleteJob = async (req, res) => {
   try {
     const job = await Job.findByIdAndDelete(req.params.id);
     if (!job) return res.status(404).json({ message: "Job not found" });
-    res.status(200).json({ message: "Job deleted successfully" });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.json({ message: "Job deleted successfully" });
+  } catch (error) {
+    res.status(400).json({ message: "Invalid Job ID", error: error.message });
   }
 };
 
