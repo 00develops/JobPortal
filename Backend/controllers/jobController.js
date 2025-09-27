@@ -6,6 +6,17 @@ const fs = require('fs');
 const mongoose = require('mongoose');
 const Job = require("../models/Job");
 
+
+// Ensure uploads folder exists
+const uploadDir = path.join(__dirname, '../uploads/jobs');
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
+// Multer setup
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadDir),
+  filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
+});
+const upload = multer({ storage });
 // ------------------ CREATE ------------------
 const createJob = async (req, res) => {
   try {

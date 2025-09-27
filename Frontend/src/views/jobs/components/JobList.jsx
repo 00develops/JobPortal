@@ -12,6 +12,7 @@ import {
   TbChevronRight,
   TbChevronsLeft,
   TbChevronsRight,
+  TbEye,
 } from "react-icons/tb";
 
 const JobList = () => {
@@ -22,7 +23,7 @@ const JobList = () => {
   const navigate = useNavigate();
   const tableRef = useRef(null);
 
-  const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:5000";
+  const BASE_URL = import.meta.env.VITE_BASE_URL;
 
   // Fetch jobs
   const fetchJobs = async () => {
@@ -69,7 +70,7 @@ const JobList = () => {
                   navigate(`/admin/jobs/view/${rowData._id || rowData.id}`, { state: rowData })
                 }
               >
-                <TbEdit className="me-1" /> View
+                <TbEye className="me-1" /> View
               </Dropdown.Item>
               <Dropdown.Item
                 onClick={() =>

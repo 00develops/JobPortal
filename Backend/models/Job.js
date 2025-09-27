@@ -34,11 +34,13 @@ const SectionSchema = new mongoose.Schema({
   richDescription: { type: String, default: "" },  // HTML / Rich text
 });
 
+
+// MetaDetails schema
 const MetaDetailsSchema = new mongoose.Schema({
-  title: { type: String, default: "", trim: true },
+  title: { type: String, default: "" },
   description: { type: String, default: "" },
-  keywords: { type: String, default: "" },
-  schemas: { type: String, default: "" },
+   keywords: { type: String, default: "" },
+  schemas: { type: String, default: "" }
 });
 
 // Main Job Schema
@@ -68,11 +70,11 @@ const JobSchema = new mongoose.Schema(
     // Eligibility
     eligibility: {
       qualification: { type: String, default: "Graduate" },
-      finalYearEligible: { type: Boolean, default: false },
+      finalYearEligible: { type: String, default: "",trim:true },
       ageMin: { type: Number },
       ageMax: { type: Number },
       ageRelaxation: { type: String, default: "" },
-      gateRequired: { type: Boolean, default: false },
+      gateRequired: { type: String, default: "",trim:true },
       gateCodes: { type: String, default: "" },
       extraRequirements: { type: String, default: "" }, // Rich text
     },

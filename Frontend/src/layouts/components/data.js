@@ -53,12 +53,12 @@ export const menuItems = [{
   icon: HiOutlineUserGroup,
   children:[{
     key:'category',
-    label:'Category',
+    label:'Category List',
     url:'/admin/category'
 },
 {
     key:'sub-category',
-    label:'SubCategory',
+    label:'SubCategory List',
     url:'/admin/sub-category'
 },
 ]},
@@ -68,7 +68,7 @@ export const menuItems = [{
   icon:BsBriefcaseFill,
   children:[{
     key:'job',
-    label:'Job',
+    label:'Job List',
     url:'/admin/jobs'
   },]},
  ];

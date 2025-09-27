@@ -49,13 +49,14 @@ icons["header"]["3"] = ReactDOMServer.renderToStaticMarkup(<TbH3 className="fs-l
 icons["header"][""] = ReactDOMServer.renderToStaticMarkup(<TbLetterT className="fs-lg" />);
 icons["table"] = ReactDOMServer.renderToStaticMarkup(<TbTable className="fs-lg" />);
 
-const SnowEditor = ({ initialValue = "", onChange }) => {
-  const [value, setValue] = useState(initialValue);
+const SnowEditor = ({ value = "", onChange }) => {
+  const [editorValue, setEditorValue] = useState(value);
   const quillRef = useRef(null);
 
+  // keep local state synced with external value (reset, defaultValues, etc.)
   useEffect(() => {
-    setValue(initialValue);
-  }, [initialValue]);
+    setEditorValue(value || "");
+  }, [value]);
 
   const modules = useMemo(
     () => ({
@@ -111,9 +112,9 @@ const SnowEditor = ({ initialValue = "", onChange }) => {
       ref={quillRef}
       theme="snow"
       modules={modules}
-      value={value}
+      value={editorValue}
       onChange={(content) => {
-        setValue(content);
+        setEditorValue(content);
         onChange?.(content);
       }}
       placeholder="Start typing..."
