@@ -36,7 +36,7 @@ const createJob = async (req, res) => {
       jobData.logo = path.join("uploads", "jobs", path.basename(logo.path));
     }
 
-    // ✅ Ensure nested objects exist
+    // Ensure nested objects exist
     jobData.meta = jobData.meta || { title: "", keywords: "", description: "" };
     jobData.eligibility = jobData.eligibility || { extraRequirements: "" };
     jobData.howToApply = jobData.howToApply || "";

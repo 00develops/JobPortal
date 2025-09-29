@@ -12,14 +12,19 @@ const FeeSchema = new mongoose.Schema({
 });
 
 const VacancySchema = new mongoose.Schema({
-  postName: { type: String, required: true, trim: true },
-  total: { type: Number, default: 0 },
-  UR: { type: Number, default: 0 },
-  EWS: { type: Number, default: 0 },
-  OBC: { type: Number, default: 0 },
-  SC: { type: Number, default: 0 },
-  ST: { type: Number, default: 0 },
-  PwBD: { type: Number, default: 0 },
+  list: [
+    {
+      postName: { type: String, required: true, trim: true },
+      total: { type: Number, default: 0 },
+      UR: { type: Number, default: 0 },
+      EWS: { type: Number, default: 0 },
+      OBC: { type: Number, default: 0 },
+      SC: { type: Number, default: 0 },
+      ST: { type: Number, default: 0 },
+      PwBD: { type: Number, default: 0 }
+    }
+  ],
+  extraRequirements: { type: String, default: "" }
 });
 
 const LinkSchema = new mongoose.Schema({

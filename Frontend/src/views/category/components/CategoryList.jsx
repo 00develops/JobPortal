@@ -81,7 +81,7 @@ const CategoryList = () => {
       orderable: false,
       createdCell: (td, cellData) => {
         td.innerHTML = cellData
-          ? `<img src="${VITE_BASE_URL}${cellData}" alt="img" width="50" />`
+          ? `<img src="${BASE_URL}${cellData}" alt="img" width="50" />`
           : "";
       },
     },

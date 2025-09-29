@@ -5,13 +5,14 @@ import axios from "axios";
 import SnowEditor from "@/components/SnowEditor";
 import { useNavigate, useParams } from "react-router-dom";
 import ComponentCard from "@/components/ComponentCard";
+import FileUploader from "../../../components/FileUploader";
+import { FaRegTrashAlt } from "react-icons/fa";
 
 export default function EditJob() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const [message, setMessage] = useState({ text: "", variant: "" });
   const [uploadedFiles, setUploadedFiles] = useState([]);
-  const [logoFile, setLogoFile] = useState(null);
+  const [message, setMessage] = useState({ text: "", variant: "" });
 
   const defaultValues = {
     metaDetails: { title: "", description: "", keywords: "", schemas: "" },
@@ -26,24 +27,25 @@ export default function EditJob() {
     modeOfExam: "Online",
     shortDescription: "",
     dates: [{ label: "Application Start Date", date: "" }, { label: "Application End Date", date: "" }],
-    fees: [
-      { category: "General / UR", fee: "" },
-      { category: "OBC", fee: "" },
-      { category: "EWS", fee: "" },
-      { category: "SC", fee: "" },
-      { category: "ST", fee: "" },
-      { category: "PwBD", fee: "" },
-      { category: "Female", fee: "" },
-    ],
-    vacancies: [{ postName: "", total: 0, UR: 0, EWS: 0, OBC: 0, SC: 0, ST: 0, PwBD: 0 }],
-    eligibility: { qualification: "Graduate", finalYearEligible: "Yes", ageMin: 0, ageMax: 0, ageRelaxation: "", gateRequired: "Yes", gateCodes: "", extraRequirements: "" },
-    salary: { payScale: "", inHand: "", allowances: "" },
-    selection: ["Shortlisting / Written Test", "Document Verification", "Medical / DV"],
-    links: [{ type: "Apply Online", label: "Apply Online", url: "" }],
+    fees: [],
+    vacancies: [],
+    eligibility: {
+      qualification: "",
+      finalYearEligible: "Yes",
+      ageMin: 0,
+      ageMax: 0,
+      ageRelaxation: "",
+      gateRequired: "Yes",
+      gateCodes: "",
+      extraRequirements: "",
+    },
+    salary: { payScale: "", inHand: 0, allowances: "" },
+    selection: [],
+    links: [],
     howToApply: "",
   };
 
-  const { register, control, handleSubmit, reset, setValue, formState: { errors } } = useForm({ defaultValues });
+  const { register, control, handleSubmit, reset, formState: { errors } } = useForm({ defaultValues });
 
   const { fields: dateFields, append: appendDate, remove: removeDate, replace: replaceDates } = useFieldArray({ control, name: "dates" });
   const { fields: feeFields, append: appendFee, remove: removeFee } = useFieldArray({ control, name: "fees" });
@@ -51,7 +53,19 @@ export default function EditJob() {
   const { fields: selectionFields, append: appendSelection, remove: removeSelection } = useFieldArray({ control, name: "selection" });
   const { fields: linkFields, append: appendLink, remove: removeLink } = useFieldArray({ control, name: "links" });
 
-  // Fetch job data
+  // Fetch existing job
+  // useEffect(() => {
+  //   const fetchJob = async () => {
+  //     try {
+  //       const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/jobs/${id}`);
+  //       reset(response.data);
+  //     } catch (error) {
+  //       console.error("Error fetching job:", error.response?.data || error.message);
+  //       setMessage({ text: "Error fetching job details.", variant: "danger" });
+  //     }
+  //   };
+  //   fetchJob();
+  // }, [id, reset]);
   useEffect(() => {
     const fetchJob = async () => {
       try {
@@ -73,7 +87,7 @@ export default function EditJob() {
         });
         replaceDates(dates);
         setUploadedFiles(job.files || []);
-        setLogoFile(job.logo || null);
+
       } catch (err) {
         console.error(err);
         setMessage({ text: "Error fetching job data.", variant: "danger" });
@@ -82,24 +96,69 @@ export default function EditJob() {
     fetchJob();
   }, [id]);
 
-  const onFilesPicked = (e) => setUploadedFiles((s) => [...s, ...Array.from(e.target.files)]);
-  const removeUploadedFile = (idx) => setUploadedFiles((s) => s.filter((_, i) => i !== idx));
-  const onLogoPicked = (e) => e.target.files[0] && setLogoFile(e.target.files[0]);
-  const removeLogo = () => setLogoFile(null);
 
   const onSubmit = async (data) => {
     try {
       const formData = new FormData();
-      formData.append("jobData", JSON.stringify(data));
-      uploadedFiles.forEach((file) => formData.append("files", file));
-      if (logoFile) formData.append("logo", logoFile);
 
-      await axios.put(`${import.meta.env.VITE_BASE_URL}/api/jobs/${id}`, formData, { headers: { "Content-Type": "multipart/form-data" } });
+      // Cast numeric fields
+      const fees = data.fees.map(f => ({ ...f, fee: Number(f.fee || 0) }));
+      const vacancies = data.vacancies.map(v => ({
+        ...v,
+        total: Number(v.total || 0),
+        UR: Number(v.UR || 0),
+        EWS: Number(v.EWS || 0),
+        OBC: Number(v.OBC || 0),
+        SC: Number(v.SC || 0),
+        ST: Number(v.ST || 0),
+        PwBD: Number(v.PwBD || 0),
+      }));
+      const eligibility = {
+        ...data.eligibility,
+        ageMin: Number(data.eligibility.ageMin || 0),
+        ageMax: Number(data.eligibility.ageMax || 0),
+      };
+      const salary = {
+        ...data.salary,
+        inHand: Number(data.salary.inHand || 0),
+      };
+
+      const jobPayload = {
+        postName: data.postName,
+        organization: data.organization,
+        advtNumber: data.advtNumber,
+        jobType: data.jobType,
+        sector: data.sector,
+        jobCategory: data.jobCategory,
+        jobLocation: data.jobLocation,
+        experience: data.experience,
+        modeOfExam: data.modeOfExam,
+        shortDescription: data.shortDescription,
+        dates: data.dates || [],
+        fees,
+        vacancies,
+        eligibility,
+        salary,
+        selection: data.selection || [],
+        links: data.links || [],
+        howToApply: data.howToApply || "",
+        metaDetails: data.metaDetails || {},
+      };
+
+      formData.append("jobData", JSON.stringify(jobPayload));
+
+      // Append files if any
+      uploadedFiles.forEach(file => formData.append("files", file));
+
+      await axios.put(`${import.meta.env.VITE_BASE_URL}/api/jobs/${id}`, formData, {
+        headers: { "Content-Type": "form-data" },
+      });
 
       setMessage({ text: "Job updated successfully!", variant: "success" });
       setTimeout(() => navigate("/admin/jobs"), 1000);
-    } catch (err) {
-      console.error(err);
+
+    } catch (error) {
+      console.error("Axios Error:", error.response?.data || error.message);
       setMessage({ text: "Error updating job. Check console.", variant: "danger" });
     }
   };
@@ -107,7 +166,11 @@ export default function EditJob() {
   return (
     <div className="mb-4 pt-4">
       <Card.Body>
-        {message.text && <Alert variant={message.variant} onClose={() => setMessage({ text: "", variant: "" })} dismissible>{message.text}</Alert>}
+        {message.text && (
+          <Alert variant={message.variant} onClose={() => setMessage({ text: "", variant: "" })} dismissible>
+            {message.text}
+          </Alert>
+        )}
 
         <Form onSubmit={handleSubmit(onSubmit)}>
 
@@ -115,15 +178,31 @@ export default function EditJob() {
           <ComponentCard className="mb-3" title="SEO & Meta Info" isCollapsible defaultOpen={false}>
             <Card.Body>
               <Row>
-                {["title", "description", "keywords", "schemas"].map((field, idx) => (
-                  <Col md={3} key={field}>
-                    <Form.Group className="mb-2">
-                      <Form.Label>Meta {field.charAt(0).toUpperCase() + field.slice(1)}</Form.Label>
-                      <Form.Control {...register(`metaDetails.${field}`)} />
-                      {errors.metaDetails?.[field] && <Form.Text className="text-danger">{errors.metaDetails[field].message}</Form.Text>}
-                    </Form.Group>
-                  </Col>
-                ))}
+                <Col md={6}>
+                  <Form.Group className="mb-2">
+                    <Form.Label>Meta Title</Form.Label>
+                    <Form.Control {...register("metaDetails.title", { required: "Meta Title is required" })} />
+                    {errors.metaDetails?.title && <Form.Text className="text-danger">{errors.metaDetails.title.message}</Form.Text>}
+                  </Form.Group>
+                </Col>
+                <Col md={6}>
+                  <Form.Group className="mb-2">
+                    <Form.Label>Meta Description</Form.Label>
+                    <Form.Control as="textarea" style={{ height: "13px" }} {...register("metaDetails.description")} />
+                  </Form.Group>
+                </Col>
+                <Col md={6}>
+                  <Form.Group className="mb-2">
+                    <Form.Label>Meta Keywords</Form.Label>
+                    <Form.Control {...register("metaDetails.keywords")} />
+                  </Form.Group>
+                </Col>
+                <Col md={6}>
+                  <Form.Group className="mb-2">
+                    <Form.Label>Meta Schemas</Form.Label>
+                    <Form.Control as="textarea" style={{ height: "13px" }} {...register("metaDetails.schemas")} />
+                  </Form.Group>
+                </Col>
               </Row>
             </Card.Body>
           </ComponentCard>
@@ -132,17 +211,53 @@ export default function EditJob() {
           <ComponentCard className="mb-3" title="Basic Job Details" isCollapsible defaultOpen>
             <Card.Body>
               <Row>
-                {["postName", "shortDescription", "organization", "advtNumber"].map((field) => (
-                  <Col md={3} key={field}>
-                    <Form.Group className="mb-2">
-                      <Form.Label>{field} <span className="text-danger">*</span></Form.Label>
-                      <Form.Control {...register(field, { required: `${field} is required` })} />
-                      {errors[field] && <Form.Text className="text-danger">{errors[field].message}</Form.Text>}
-                    </Form.Group>
-                  </Col>
-                ))}
-                <Col md={3}><Form.Group className="mb-2"><Form.Label>Job Type</Form.Label><Form.Select {...register("jobType")}><option>Permanent</option><option>Contract</option><option>Apprentice</option></Form.Select></Form.Group></Col>
-                <Col md={3}><Form.Group className="mb-2"><Form.Label>Sector</Form.Label><Form.Select {...register("sector")}><option>Central Govt</option><option>State Govt</option><option>PSU</option></Form.Select></Form.Group></Col>
+                <Col md={6}>
+                  <Form.Group className="mb-2">
+                    <Form.Label>Post Title</Form.Label>
+                    <Form.Control {...register("postName")} />
+                  </Form.Group>
+                </Col>
+                <Col md={6}>
+                  <Form.Group className="mb-2">
+                    <Form.Label>Short Description</Form.Label>
+                    <Form.Control as="textarea" style={{ height: "13px" }} {...register("shortDescription")} />
+                  </Form.Group>
+                </Col>
+                <Col md={3}>
+                  <Form.Group className="mb-2">
+                    <Form.Label>Organization</Form.Label>
+                    <Form.Control {...register("organization")} />
+                  </Form.Group>
+                </Col>
+                <Col md={3}>
+                  <Form.Group className="mb-2">
+                    <Form.Label>Advertisement Number</Form.Label>
+                    <Form.Control {...register("advtNumber")} />
+                  </Form.Group>
+                </Col>
+
+
+                <Col md={3}>
+                  <Form.Group className="mb-2">
+                    <Form.Label>Job Type</Form.Label>
+                    <Form.Select {...register("jobType")}>
+                      <option>Permanent</option>
+                      <option>Contract</option>
+                      <option>Apprentice</option>
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+                <Col md={3}>
+                  <Form.Group className="mb-2">
+                    <Form.Label>Sector</Form.Label>
+                    <Form.Select {...register("sector")}>
+                      <option>Central Govt</option>
+                      <option>State Govt</option>
+                      <option>PSU</option>
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+
               </Row>
             </Card.Body>
           </ComponentCard>
@@ -151,20 +266,35 @@ export default function EditJob() {
           <ComponentCard className="mb-3" title="Important Dates" isCollapsible defaultOpen>
             <Card.Body className="overflow-auto">
               <Table bordered size="sm">
-                <thead><tr><th>Label</th><th>Date</th><th className="text-center">Action</th></tr></thead>
+                <thead>
+                  <tr>
+                    <th>Label</th>
+                    <th>Date</th>
+                    <th className="text-center w-25">Action</th>
+                  </tr>
+                </thead>
                 <tbody>
-                  {dateFields.map((f, idx) => (
-                    <tr key={f.id}>
-                      <td><Form.Control className="border-0 shadow-none" type="text" {...register(`dates.${idx}.label`)} /></td>
-                      <td><Form.Control className="border-0 shadow-none" type="date" {...register(`dates.${idx}.date`)} /></td>
-                      <td><Button className="p-1 btn-light w-100" variant="danger" onClick={() => removeDate(idx)}>Remove</Button></td>
+                  {dateFields.map((field, idx) => (
+                    <tr key={field.id} >
+                      <td>
+                        <Form.Control className="border-0 shadow-none" type="text" {...register(`dates.${idx}.label`)} />
+                        {errors.dates?.[idx]?.label && <Form.Text className="text-danger">{errors.dates[idx].label.message}</Form.Text>}
+                      </td>
+                      <td>
+                        <Form.Control className="border-0 shadow-none" type="date" {...register(`dates.${idx}.date`)} />
+                        {errors.dates?.[idx]?.date && <Form.Text className="text-danger">{errors.dates[idx].date.message}</Form.Text>}
+                      </td>
+                      <td className="d-flex justify-content-center gap-2">
+                        <Button className="p-1 sm " onClick={() => appendDate({ label: "New Date", date: "" })}>+ Add Date</Button>
+                        <Button className="p-1   btn-light" variant="danger" onClick={() => removeDate(idx)}><FaRegTrashAlt className="me-1" />       Remove</Button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </Table>
-              <div className="border-top border-dashed mt-3 text-end">
-                <Button className="mt-2 sm" onClick={() => appendDate({ label: "New Date", date: "" })}>+ Add Date</Button>
-              </div>
+              {/* <div className="border-top border-dashed mt-4 text-end">
+                <Button className="mt-3 me-2 sm" onClick={() => appendDate({ label: "New Date", date: "" })}>+ Add Date</Button>
+              </div> */}
             </Card.Body>
           </ComponentCard>
 
@@ -172,42 +302,73 @@ export default function EditJob() {
           <ComponentCard className="mb-3" title="Application Fee" isCollapsible defaultOpen>
             <Card.Body className="overflow-auto">
               <Table bordered size="sm">
-                <thead><tr><th>Category</th><th>Fee ⟨₹⟩</th><th className="text-center">Action</th></tr></thead>
+                <thead>
+                  <tr>
+                    <th>Category</th>
+                    <th>Fee ⟨₹⟩</th>
+                    <th className="text-center w-25">Action</th>
+                  </tr>
+                </thead>
                 <tbody>
                   {feeFields.map((f, idx) => (
                     <tr key={f.id}>
-                      <td><Form.Control className="border-0 shadow-none" {...register(`fees.${idx}.category`)} /></td>
-                      <td><Form.Control className="border-0 shadow-none" type="number" {...register(`fees.${idx}.fee`)} /></td>
-                      <td><Button className="p-1 btn-light w-100" variant="danger" onClick={() => removeFee(idx)}>Remove</Button></td>
+                      <td>
+                        <Form.Control className="border-0  shadow-none" type="text" {...register(`fees.${idx}.category`, { required: "Category is required" })} />
+                        {errors.fees?.[idx]?.category && <Form.Text className="text-danger">{errors.fees[idx].category.message}</Form.Text>}
+                      </td>
+                      <td>
+                        <Form.Control className="border-0 shadow-none" type="number" {...register(`fees.${idx}.fee`, { required: "Fee is required" })} />
+                        {errors.fees?.[idx]?.fee && <Form.Text className="text-danger">{errors.fees[idx].fee.message}</Form.Text>}
+                      </td>
+                      <td className="d-flex justify-content-center gap-2  ">
+                        <Button className="p-1 sm" onClick={() => appendFee({ category: "", fee: "" })}>+ Add Fee</Button>
+                        <Button className="p-1   btn-light" variant="danger" onClick={() => removeFee(idx)}> <FaRegTrashAlt className="me-1" />    Remove</Button></td>
                     </tr>
                   ))}
                 </tbody>
               </Table>
-              <div className="border-top border-dashed mt-3 text-end">
-                <Button className="mt-2 sm" onClick={() => appendFee({ category: "", fee: "" })}>+ Add Fee</Button>
-              </div>
+              {/* <div className="border-top border-dashed mt-4 text-end">
+                <Button className="mt-3 me-2  sm" onClick={() => appendFee({ category: "", fee: "" })}>+ Add Fee</Button>
+              </div> */}
             </Card.Body>
           </ComponentCard>
 
           {/* Vacancies */}
           <ComponentCard className="mb-3" title="Vacancies" isCollapsible defaultOpen>
             <Card.Body className="overflow-auto">
-              <Table bordered size="sm">
-                <thead><tr><th>Post Name</th><th>Total</th><th>UR</th><th>EWS</th><th>OBC</th><th>SC</th><th>ST</th><th>PwBD</th><th>Action</th></tr></thead>
+              <Table bordered size="sm" >
+                <thead>
+                  <tr>
+                    <th>Post Name</th><th>Total</th><th>UR</th><th>EWS</th><th>OBC</th><th>SC</th><th>ST</th><th>PwBD</th><th className="w-25">Action</th>
+                  </tr>
+                </thead>
                 <tbody>
                   {vacancyFields.map((v, idx) => (
                     <tr key={v.id}>
-                      {["postName", "total", "UR", "EWS", "OBC", "SC", "ST", "PwBD"].map((f) => (
-                        <td key={f}><Form.Control className="border-0 shadow-none" {...register(`vacancies.${idx}.${f}`)} type={f === "postName" ? "text" : "number"} /></td>
+                      {["postName", "total", "UR", "EWS", "OBC", "SC", "ST", "PwBD"].map((field) => (
+                        <td key={field} >
+                          <Form.Control className="border-0 shadow-none p-1" {...register(`vacancies.${idx}.${field}`, { required: true })} type={field === "postName" ? "text" : "number"} />
+                        </td>
                       ))}
-                      <td><Button className="p-1 btn-light " variant="danger" onClick={() => removeVacancy(idx)}>Remove</Button></td>
+                      <td className="d-flex justify-content-center gap-2">
+                        <Button className="p-1 sm" onClick={() => appendVacancy({ postName: "", total: 0, UR: 0, EWS: 0, OBC: 0, SC: 0, ST: 0, PwBD: 0 })}>+ Add Vacancy</Button>
+                        <Button className="p-1 btn-light" variant="danger" onClick={() => removeVacancy(idx)}><FaRegTrashAlt className="me-1" />     Remove</Button></td>
                     </tr>
                   ))}
                 </tbody>
               </Table>
-              <div className="border-top border-dashed mt-3 text-end">
-                <Button className="mt-2 sm" onClick={() => appendVacancy({ postName: "", total: 0, UR: 0, EWS: 0, OBC: 0, SC: 0, ST: 0, PwBD: 0 })}>+ Add Vacancy</Button>
-              </div>
+              <Form.Group className="mb-2">
+                <Form.Label>Extra Requirements</Form.Label>
+                <Controller
+                  control={control}
+                  name={`vacancies.0.extraRequirements`} // Bind to the first vacancy
+                  render={({ field }) => <SnowEditor {...field} />}
+                />
+              </Form.Group>
+
+              {/* <div className="border-top border-dashed mt-4 text-end">
+                <Button className="mt-3 sm" onClick={() => appendVacancy({ postName: "", total: 0, UR: 0, EWS: 0, OBC: 0, SC: 0, ST: 0, PwBD: 0 })}>+ Add Vacancy</Button>
+              </div> */}
             </Card.Body>
           </ComponentCard>
 
@@ -215,27 +376,72 @@ export default function EditJob() {
           <ComponentCard className="mb-3" title="Eligibility" isCollapsible defaultOpen>
             <Card.Body>
               <Row>
-                <Col md={3}><Form.Group className="mb-2"><Form.Label>Qualification</Form.Label><Form.Control {...register("eligibility.qualification")} /></Form.Group></Col>
-                <Col md={3} lg={1}><Form.Group className="mb-2"><Form.Label>Final Year Eligible</Form.Label>
+                <Col md={3}>
+                  <Form.Group className="mb-2">
+                    <Form.Label>Qualification</Form.Label>
+                    <Form.Control {...register("eligibility.qualification")} />
+                  </Form.Group>
+                </Col>
+                <Col md-md={3} lg={1}>
+                  <Form.Group className="mb-2">
+
+                    <Form.Label>Final Year</Form.Label>
                     <Form.Select {...register("eligibility.finalYearEligible")}>
                       <option>Yes</option>
                       <option>No</option>
                     </Form.Select>
-</Form.Group></Col>
-                <Col md={1}><Form.Group className="mb-2"><Form.Label>Min Age</Form.Label><Form.Control type="number" {...register("eligibility.ageMin")} /></Form.Group></Col>
-                <Col md={1}><Form.Group className="mb-2"><Form.Label>Max Age</Form.Label><Form.Control type="number" {...register("eligibility.ageMax")} /></Form.Group></Col>
-                <Col md={2}><Form.Group className="mb-2"><Form.Label>Age Relaxation</Form.Label><Form.Control {...register("eligibility.ageRelaxation")} /></Form.Group></Col>
-                <Col md={3} lg={1}><Form.Group className="mb-2"><Form.Label>GATE Required</Form.Label>
-                  <Form.Select {...register("eligibility.gateRequired")}>
-                    <option>Yes</option>
-                    <option>No</option>
-                  </Form.Select>
-                </Form.Group></Col>
-                <Col md={3}><Form.Group className="mb-2"><Form.Label>GATE Codes</Form.Label><Form.Control {...register("eligibility.gateCodes")} /></Form.Group></Col>
+
+
+                  </Form.Group>
+
+                </Col>
+                <Col md={1}>
+                  <Form.Group className="mb-2">
+                    <Form.Label>Min Age</Form.Label>
+                    <Form.Control type="number" {...register("eligibility.ageMin")} />
+                  </Form.Group>
+                </Col>
+                <Col md={1}>
+                  <Form.Group className="mb-2">
+                    <Form.Label>Max Age</Form.Label>
+                    <Form.Control type="number" {...register("eligibility.ageMax")} />
+                  </Form.Group>
+                </Col>
+                <Col md={2}>
+                  <Form.Group className="mb-2 align-start">
+                    <Form.Label>Age Relaxation</Form.Label>
+                    <Form.Control {...register("eligibility.ageRelaxation")} />
+                  </Form.Group>
+                </Col>
+                <Col md-md={3} lg={1} >
+
+                  <Form.Group className="mb-2">
+
+                    <Form.Label>GATE Required</Form.Label>
+
+                    <Form.Select {...register("eligibility.gateRequired")}>
+                      <option>Yes</option>
+                      <option>No</option>
+                    </Form.Select>
+
+
+                  </Form.Group>
+
+                </Col>
+                <Col md={3}>
+                  <Form.Group className="mb-2">
+                    <Form.Label>GATE Codes</Form.Label>
+                    <Form.Control {...register("eligibility.gateCodes")} />
+                  </Form.Group>
+                </Col>
               </Row>
               <Form.Group className="mb-2">
                 <Form.Label>Extra Requirements</Form.Label>
-                <Controller control={control} name="eligibility.extraRequirements" render={({ field }) => <SnowEditor {...field} />} />
+                <Controller
+                  control={control}
+                  name="eligibility.extraRequirements"
+                  render={({ field }) => <SnowEditor {...field} />}
+                />
               </Form.Group>
             </Card.Body>
           </ComponentCard>
@@ -244,9 +450,24 @@ export default function EditJob() {
           <ComponentCard className="mb-3" title="Salary & Benefits" isCollapsible defaultOpen>
             <Card.Body>
               <Row>
-                <Col md={4}><Form.Group className="mb-2"><Form.Label>Pay Scale</Form.Label><Form.Control {...register("salary.payScale")} /></Form.Group></Col>
-                <Col md={4}><Form.Group className="mb-2"><Form.Label>In Hand</Form.Label><Form.Control type="number" {...register("salary.inHand")} /></Form.Group></Col>
-                <Col md={4}><Form.Group className="mb-2"><Form.Label>Allowances</Form.Label><Form.Control {...register("salary.allowances")} /></Form.Group></Col>
+                <Col md={4}>
+                  <Form.Group className="mb-2">
+                    <Form.Label>Pay Scale</Form.Label>
+                    <Form.Control {...register("salary.payScale")} />
+                  </Form.Group>
+                </Col>
+                <Col md={4}>
+                  <Form.Group className="mb-2">
+                    <Form.Label>In Hand</Form.Label>
+                    <Form.Control type="number" {...register("salary.inHand")} />
+                  </Form.Group>
+                </Col>
+                <Col md={4}>
+                  <Form.Group className="mb-2">
+                    <Form.Label>Allowances</Form.Label>
+                    <Form.Control {...register("salary.allowances")} />
+                  </Form.Group>
+                </Col>
               </Row>
             </Card.Body>
           </ComponentCard>
@@ -256,13 +477,15 @@ export default function EditJob() {
             <Card.Body>
               {selectionFields.map((s, idx) => (
                 <Row key={s.id} className="mb-2">
-                  <Col md={11}><Form.Control {...register(`selection.${idx}`)} /></Col>
-                  <Col md={1}><Button className="p-1 btn-light w-100" variant="danger" onClick={() => removeSelection(idx)}>Remove</Button></Col>
+                  <Col md={9}><Form.Control {...register(`selection.${idx}`)} /></Col>
+                  <Col md={3} className="d-flex justify-content-center gap-2">
+                    <Button className="p-1 sm" onClick={() => appendSelection("")}>+ Add Selection Step</Button>
+                    <Button className="p-1 btn-light sm" variant="" onClick={() => removeSelection(idx)}><FaRegTrashAlt className="me-1" />    Remove</Button></Col>
                 </Row>
               ))}
-              <div className="border-top border-dashed mt-3 text-end">
-                <Button className="mt-2 sm" onClick={() => appendSelection("")}>+ Add Selection Step</Button>
-              </div>
+              {/* <div className="border-top border-dashed mt-4 text-end">
+                <Button className="mt-3 me-2 sm" onClick={() => appendSelection("")}>+ Add Selection Step</Button>
+              </div> */}
             </Card.Body>
           </ComponentCard>
 
@@ -272,67 +495,118 @@ export default function EditJob() {
               {linkFields.map((l, idx) => (
                 <Row key={l.id} className="mb-2">
                   <Col md={3}><Form.Control {...register(`links.${idx}.type`)} placeholder="Type" /></Col>
-                  <Col md={4}><Form.Control {...register(`links.${idx}.label`)} placeholder="Label" /></Col>
-                  <Col md={4}><Form.Control {...register(`links.${idx}.url`)} type="url" placeholder="URL" /></Col>
-                  <Col md={1}><Button className="p-1 btn-light w-100" variant="danger" onClick={() => removeLink(idx)}>Remove</Button></Col>
+                  <Col md={3}><Form.Control {...register(`links.${idx}.label`)} placeholder="Label" /></Col>
+                  <Col md={3}><Form.Control {...register(`links.${idx}.url`)} placeholder="URL" type="url" /></Col>
+                  <Col md={3} className="d-flex justify-content-center gap-2 align-items-center">
+                    <Button className="p-1 sm" onClick={() => appendLink({ type: "", label: "", url: "" })}>+ Add Link</Button>
+                    <Button className="p-1   btn-light " variant="danger" onClick={() => removeLink(idx)}><FaRegTrashAlt className="me-1" />    Remove</Button></Col>
                 </Row>
               ))}
-              <div className="border-top border-dashed mt-3 text-end">
-                <Button className="mt-2 sm" onClick={() => appendLink({ type: "", label: "", url: "" })}>+ Add Link</Button>
-              </div>
+              {/* <div className="border-top  border-dashed mt-4 text-end">
+
+                <Button className="mt-3 me-2 sm" onClick={() => appendLink({ type: "", label: "", url: "" })}>+ Add Link</Button>
+              </div> */}
             </Card.Body>
           </ComponentCard>
 
           {/* How To Apply */}
           <ComponentCard className="mb-3" title="How To Apply" isCollapsible defaultOpen>
             <Card.Body>
-              <Controller control={control} name="howToApply" render={({ field }) => <SnowEditor {...field} />} />
+              <Controller
+                control={control}
+                name="howToApply"
+                render={({ field }) => <SnowEditor {...field} />}
+              />
             </Card.Body>
           </ComponentCard>
 
-          {/* Files / Logo */}
-          <ComponentCard className="mb-3" title="Files / Logo" isCollapsible defaultOpen>
+          {/* File Uploads */}
+          <ComponentCard className="mb-3" title="Files " isCollapsible defaultOpen>
             <Card.Body>
-              <Row>
-                <Col md={6}>
-                  <Form.Group className="mb-2">
-                    <Form.Label>Upload Files</Form.Label>
-                    <Form.Control type="file" multiple onChange={onFilesPicked} />
-                  </Form.Group>
-                  {uploadedFiles.map((file, idx) => (
-                    <div key={idx} className="d-flex align-items-center mb-1">
-                      {typeof file === "string" ? (
-                        <a href={file} target="_blank" rel="noopener noreferrer">{file.split("/").pop()}</a>
-                      ) : (
-                        <span>{file.name}</span>
-                      )}
-                      <Button size="sm" variant="danger" className="ms-2" onClick={() => removeUploadedFile(idx)}>Remove</Button>
-                    </div>
-                  ))}
-                </Col>
-                <Col md={6}>
-                  <Form.Group className="mb-2">
-                    <Form.Label>Upload Logo</Form.Label>
-                    <Form.Control type="file" onChange={onLogoPicked} />
-                  </Form.Group>
-                  {logoFile && (
-                    <div className="d-flex align-items-center mb-1">
-                      {typeof logoFile === "string" ? (
-                        <img src={logoFile} alt="Logo" style={{ height: "40px", marginRight: "10px" }} />
-                      ) : (
-                        <span>{logoFile.name}</span>
-                      )}
-                      <Button size="sm" variant="danger" className="ms-2" onClick={removeLogo}>Remove</Button>
-                    </div>
-                  )}
-                </Col>
-              </Row>
+              <Form.Group className="mb-2">
+                <Form.Label>Upload File</Form.Label>
+                <FileUploader
+                  files={uploadedFiles}
+                  setFiles={setUploadedFiles}
+                  maxFileCount={12}
+                  multiple={true}
+                />
+
+                {/* Preview existing images */}
+                {uploadedFiles.length > 0 && (
+                  <div className="mt-2 d-flex flex-wrap gap-2">
+                    {uploadedFiles.map((file, idx) => {
+                      // Only preview images
+                      const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(file);
+                      return (
+                        <div key={idx} style={{ position: "relative", width: 100, height: 100 }}>
+                          {isImage ? (
+                            <img
+                              src={`${import.meta.env.VITE_BASE_URL}/${file}`}
+
+                             
+                            />
+                          ) : (
+                            <div
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                border: "1px solid #ccc",
+                                borderRadius: 4,
+                                fontSize: 12,
+                                textAlign: "center",
+                                padding: 4,
+                              }}
+                            >
+                              {file.split("/").pop()}
+                            </div>
+                          )}
+                          {/* Remove button */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newFiles = uploadedFiles.filter((_, i) => i !== idx);
+                              setUploadedFiles(newFiles);
+                            }}
+                            style={{
+                              position: "absolute",
+                              top: 2,
+                              right: 2,
+                              background: "rgba(255,0,0,0.8)",
+                              border: "none",
+                              color: "white",
+                              borderRadius: "50%",
+                              width: 20,
+                              height: 20,
+                              cursor: "pointer",
+                              fontSize: 12,
+                              lineHeight: "18px",
+                              padding: 0,
+                            }}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </Form.Group>
+
+
+
+
             </Card.Body>
           </ComponentCard>
 
-          <div className="text-end mt-3">
+
+          <div className="text-end mt-3 me-3">
             <Button type="submit">Update Job</Button>
           </div>
+
         </Form>
       </Card.Body>
     </div>

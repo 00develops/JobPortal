@@ -1,111 +1,92 @@
 import React, { useEffect, useState } from "react";
-import { Card, Row, Col, Table, Alert, Spinner } from "react-bootstrap";
+import { Card, Row, Col, Table, Alert } from "react-bootstrap";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import SnowEditor from "@/components/SnowEditor";
 import ComponentCard from "@/components/ComponentCard";
 
 export default function ViewJob() {
   const { id } = useParams();
   const [job, setJob] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState({ text: "", variant: "" });
+  
 
   useEffect(() => {
     const fetchJob = async () => {
       try {
-        const { data } = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/jobs/${id}`);
-        setJob(data);
-      } catch (error) {
-        console.error("Error fetching job:", error);
-        setMessage({ text: "Error loading job data.", variant: "danger" });
-      } finally {
-        setLoading(false);
+        const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/jobs/${id}`);
+        setJob(res.data);
+        
+      } catch (err) {
+        console.error(err);
+        setMessage({ text: "Error fetching job data.", variant: "danger" });
       }
     };
     fetchJob();
   }, [id]);
 
-  if (loading) return <div className="d-flex justify-content-center mt-5"><Spinner animation="border" /></div>;
-  if (!job) return null;
+  if (!job) return <p>Loading...</p>;
 
   return (
     <div className="mb-4 pt-4">
       <Card.Body>
-        {message.text && (
-          <Alert variant={message.variant} dismissible onClose={() => setMessage({ text: "", variant: "" })}>
-            {message.text}
-          </Alert>
-        )}
+        {message.text && <Alert variant={message.variant}>{message.text}</Alert>}
 
         {/* Meta Details */}
-        <ComponentCard className="mb-3" title="SEO & Meta Info"   defaultOpen={false}>
+        <ComponentCard className="mb-3" title="SEO & Meta Info" isCollapsible defaultOpen={false}>
           <Card.Body>
             <Row>
-              <Col md={3}><strong>Title:</strong> {job.metaDetails?.title}</Col>
-              <Col md={3}><strong>Description:</strong> {job.metaDetails?.description}</Col>
-              <Col md={3}><strong>Keywords:</strong> {job.metaDetails?.keywords}</Col>
-              <Col md={3}><strong>Schemas:</strong> {job.metaDetails?.schemas}</Col>
+              <Col className="py-2" md={6}><strong>Meta Title:</strong> <br /> {job.metaDetails?.title}</Col>
+              <Col className="py-2" md={6}><strong>Meta Description:</strong> <div dangerouslySetInnerHTML={{ __html: job.metaDetails?.description }} /></Col>
+              <Col className="py-2" md={6}><strong>Meta Keywords:</strong> <br /> {job.metaDetails?.keywords}</Col>
+              <Col className="py-2" md={6}><strong>Meta Schemas:</strong> <div dangerouslySetInnerHTML={{ __html: job.metaDetails?.schemas }} /></Col>
             </Row>
           </Card.Body>
         </ComponentCard>
 
         {/* Basic Job Details */}
-        <ComponentCard className="my-4" title="Basic Job Details" defaultOpen>
-          <Card.Body className=" mb-4">
+        <ComponentCard className="mb-3" title="Basic Job Details" isCollapsible defaultOpen={false} >
+          <Card.Body>
             <Row>
-              <Col md={3}><strong>Post Name:</strong> {job.postName}</Col>
-              <Col md={3}><strong>Organization:</strong> {job.organization}</Col>
-              <Col md={3}><strong>Advertisement No:</strong> {job.advtNumber}</Col>
-              <Col md={3}><strong>Job Type:</strong> {job.jobType}</Col>
-            </Row>
-            <Row>
-              <Col md={3}><strong>Sector:</strong> {job.sector}</Col>
-              <Col md={3}><strong>Category:</strong> {job.jobCategory}</Col>
-              <Col md={3}><strong>Location:</strong> {job.jobLocation}</Col>
-              <Col md={3}><strong>Experience:</strong> {job.experience}</Col>
-            </Row>
-            <Row>
-              <Col md={12}><strong>Mode of Exam:</strong> {job.modeOfExam}</Col>
-            </Row>
-            <Row>
-              <Col md={12}><strong>Short Description:</strong> {job.shortDescription}</Col>
+              <Col className="py-2" md={6}><strong>Post Title:</strong> <br /> {job.postName}</Col>
+              <Col className="py-2" md={6}><strong>Short Description:</strong> <div dangerouslySetInnerHTML={{ __html: job.shortDescription }} /></Col>
+              <Col className="py-2" md={3}><strong>Organization:</strong> <br /> {job.organization}</Col>
+              <Col className="py-2" md={3}><strong>Advertisement Number:</strong> <br /> {job.advtNumber}</Col>
+              <Col className="py-2" md={3}><strong>Job Type:</strong> <br /> {job.jobType}</Col>
+              <Col className="py-2" md={3}><strong>Sector:</strong> <br /> {job.sector}</Col>
             </Row>
           </Card.Body>
         </ComponentCard>
 
         {/* Important Dates */}
-        <ComponentCard className="mb-3" title="Important Dates"   defaultOpen>
-          <Card.Body className="mb-3">
+        <ComponentCard className="mb-3" title="Important Dates" isCollapsible defaultOpen={false}>
+          <Card.Body>
             <Table bordered size="sm">
-              <thead>
-                <tr>
-                  <th>Label</th>
-                  <th>Date</th>
-                </tr>
-              </thead>
+              <thead><tr><th>Label</th><th>Date</th></tr></thead>
               <tbody>
-                {job.dates?.map((d, idx) => (
-                  <tr key={idx}>
-                    <td>{d.label}</td>
-                    <td>{d.date ? new Date(d.date).toLocaleDateString() : "-"}</td>
-                  </tr>
-                ))}
+                {job.dates?.map((d, idx) => {
+                  const localDate = new Date(d.date).toLocaleDateString("en-IN", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                  });
+                  return (
+                    <tr key={idx}>
+                      <td>{d.label}</td>
+                      <td>{localDate}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
+
             </Table>
           </Card.Body>
         </ComponentCard>
 
         {/* Application Fee */}
-        <ComponentCard className="mb-3" title="Application Fee"   defaultOpen>
+        <ComponentCard className="mb-3" title="Application Fee" isCollapsible defaultOpen={false}>
           <Card.Body>
             <Table bordered size="sm">
-              <thead>
-                <tr>
-                  <th>Category</th>
-                  <th>Fee (₹)</th>
-                </tr>
-              </thead>
+              <thead><tr><th>Category</th><th>Fee ⟨₹⟩</th></tr></thead>
               <tbody>
                 {job.fees?.map((f, idx) => (
                   <tr key={idx}>
@@ -119,12 +100,19 @@ export default function ViewJob() {
         </ComponentCard>
 
         {/* Vacancies */}
-        <ComponentCard className="mb-3" title="Vacancies"   defaultOpen>
+        <ComponentCard className="mb-3" title="Vacancies" isCollapsible defaultOpen={false}>
           <Card.Body>
             <Table bordered size="sm">
               <thead>
                 <tr>
-                  <th>Post Name</th><th>Total</th><th>UR</th><th>EWS</th><th>OBC</th><th>SC</th><th>ST</th><th>PwBD</th>
+                  <th>Post Name</th>
+                  <th>Total</th>
+                  <th>UR</th>
+                  <th>EWS</th>
+                  <th>OBC</th>
+                  <th>SC</th>
+                  <th>ST</th>
+                  <th>PwBD</th>
                 </tr>
               </thead>
               <tbody>
@@ -142,84 +130,151 @@ export default function ViewJob() {
                 ))}
               </tbody>
             </Table>
+            <div>
+              <strong>Extra Requirements:</strong>
+              <div className="form-control" dangerouslySetInnerHTML={{ __html: job.vacancies?.[0]?.extraRequirements }} />
+            </div>
           </Card.Body>
         </ComponentCard>
 
         {/* Eligibility */}
-        <ComponentCard className="mb-3" title="Eligibility"   defaultOpen>
-          <Card.Body className="mb-3">
+        <ComponentCard className="mb-3" title="Eligibility" isCollapsible defaultOpen={false}>
+          <Card.Body>
             <Row>
-              <Col md={3}><strong>Qualification:</strong> {job.eligibility?.qualification}</Col>
-              <Col md={1}><strong>Final Year Eligible:</strong> {job.eligibility?.finalYearEligible ? "Yes" : "No"}</Col>
-              <Col md={1}><strong>Min Age:</strong> {job.eligibility?.ageMin}</Col>
-              <Col md={1}><strong>Max Age:</strong> {job.eligibility?.ageMax}</Col>
-              <Col md={2}><strong>Age Relaxation:</strong> {job.eligibility?.ageRelaxation}</Col>
-              <Col md={1}><strong>GATE Required:</strong> {job.eligibility?.gateRequired ? "Yes" : "No"}</Col>
-              <Col md={3}><strong>GATE Codes:</strong> {job.eligibility?.gateCodes}</Col>
+              <Col className="py-2" md={3}><strong>Qualification:</strong> <br /> {job.eligibility?.qualification}</Col>
+              <Col className="py-2" md={3}><strong>Final Year Eligible:</strong> <br /> {job.eligibility?.finalYearEligible}</Col>
+              <Col className="py-2" md={1}><strong>Min Age:</strong> <br /> {job.eligibility?.ageMin}</Col>
+              <Col className="py-2" md={1}><strong>Max Age:</strong> <br /> {job.eligibility?.ageMax}</Col>
+              <Col className="py-2" md={2}><strong>Age Relaxation:</strong> <br /> {job.eligibility?.ageRelaxation}</Col>
+              <Col className="py-2" md={3}><strong>GATE Required:</strong> <br /> {job.eligibility?.gateRequired}</Col>
+              <Col className="py-2" md={3}><strong>GATE Codes:</strong> <br /> {job.eligibility?.gateCodes}</Col>
             </Row>
-            <Row className="mt-2">
-              <Col md={12}><strong>Extra Requirements:</strong>
-                <SnowEditor value={job.eligibility?.extraRequirements || ""} readOnly />
-              </Col>
-            </Row>
+            <div>
+              <strong className="py-2">Extra Requirements:</strong>
+              <div className="form-control" dangerouslySetInnerHTML={{ __html: job.eligibility?.extraRequirements }} />
+            </div>
           </Card.Body>
         </ComponentCard>
 
-        {/* Salary */}
-        <ComponentCard className="mb-3" title="Salary"   defaultOpen>
-          <Card.Body className="mb-3">
+        {/* Salary & Benefits */}
+        <ComponentCard className="mb-3" title="Salary & Benefits" isCollapsible defaultOpen={false}>
+          <Card.Body>
             <Row>
-              <Col md={4}><strong>Pay Scale:</strong> {job.salary?.payScale}</Col>
-              <Col md={4}><strong>In Hand:</strong> {job.salary?.inHand}</Col>
-              <Col md={4}><strong>Allowances:</strong> {job.salary?.allowances}</Col>
+              <Col md={4}><strong>Pay Scale:</strong> <br /> {job.salary?.payScale}</Col>
+              <Col md={4}><strong>In Hand:</strong> <br /> {job.salary?.inHand}</Col>
+              <Col md={4}><strong>Allowances:</strong> <br /> {job.salary?.allowances}</Col>
             </Row>
           </Card.Body>
         </ComponentCard>
 
         {/* Selection Process */}
-        <ComponentCard className="mb-3" title="Selection Process"   defaultOpen>
-          <Card.Body className="mb-3">
+        <ComponentCard className="mb-3" title="Selection Process" isCollapsible defaultOpen={false}>
+          <Card.Body>
             <ul>
-              {job.selection?.map((step, idx) => <li key={idx}>{step}</li>)}
+              {job.selection?.map((s, idx) => <li key={idx}>{s}</li>)}
             </ul>
           </Card.Body>
         </ComponentCard>
 
-        {/* Links */}
-        <ComponentCard className="mb-3" title="Links"   defaultOpen>
+        {/* Important Links */}
+        <ComponentCard className="mb-3" title="Important Links" isCollapsible defaultOpen={false}>
           <Card.Body>
             <ul>
               {job.links?.map((l, idx) => (
-                <li key={idx}><strong>{l.type}:</strong> <a href={l.url} target="_blank">{l.label}</a></li>
+                <li key={idx}><a href={l.url} target="_blank" rel="noopener noreferrer">{l.label} ({l.type})</a></li>
               ))}
             </ul>
           </Card.Body>
         </ComponentCard>
 
         {/* How To Apply */}
-        <ComponentCard className="mb-3" title="How To Apply"   defaultOpen>
-          <Card.Body className="mb-3">
-            <SnowEditor value={job.howToApply || ""} readOnly />
+        <ComponentCard className="mb-3" title="How To Apply" isCollapsible defaultOpen={false}>
+          <Card.Body>
+            <div className="form-control" dangerouslySetInnerHTML={{ __html: job.howToApply }} />
           </Card.Body>
         </ComponentCard>
 
-        {/* Files & Logo */}
-        <ComponentCard className="mb-3" title="Files & Logo"   defaultOpen>
-          <Card.Body className="mb-3">
-            <Row>
-              <Col md={6}>
-                <strong>Files:</strong>
-                <ul>
-                  {job.files?.map((f, idx) => <li key={idx}>{f}</li>)}
-                </ul>
-              </Col>
-              <Col md={6}>
-                <strong>Logo:</strong> {job.logo || "No Logo"}
-              </Col>
-            </Row>
+        {/* Files / Logo */}
+        <ComponentCard className="mb-3" title="Uploaded Files" isCollapsible defaultOpen={false}>
+          <Card.Body>
+            <strong>Files:</strong>
+            <ul className="list-unstyled mt-2 d-flex flex-wrap gap-3">
+              {job.files?.map((f, idx) => {
+                const fileName = f.split("/").pop();
+                const ext = fileName.split(".").pop()?.toLowerCase();
+
+                // Image preview
+                if (/\.(jpg|jpeg|png|gif|webp|svg)$/i.test(fileName)) {
+                  return (
+                    <li key={idx} className="text-center">
+                      <a href={f} target="_blank" rel="noopener noreferrer">
+                        <img
+                          src={`${import.meta.env.VITE_BASE_URL}/${f}`}
+
+                          style={{ height: "50px", width: "auto", objectFit: "cover", borderRadius: "4px" }}
+                          className="mb-1 border"
+                        />
+                      </a>
+                      {/* <div style={{ fontSize: "0.75rem", maxWidth: "auto", wordBreak: "break-word" }}>{fileName}</div> */}
+                    </li>
+                  );
+                }
+
+                // PDF preview (small embed)
+                if (ext === "pdf") {
+                  return (
+                    <li key={idx} className="text-center">
+                      <embed
+                        src={`${import.meta.env.VITE_BASE_URL}/${f}`}
+                        type="application/pdf"
+                        width="50"
+                        height="50"
+                        className="border rounded mb-1"
+                      />
+                      <div style={{ fontSize: "0.75rem", maxWidth: "60px", wordBreak: "break-word" }}>
+                        <a href={f} target="_blank" rel="noopener noreferrer">{fileName}</a>
+                      </div>
+                    </li>
+                  );
+                }
+
+                // Video preview
+                if (/\.(mp4|webm|ogg)$/i.test(fileName)) {
+                  return (
+                    <li key={idx} className="text-center">
+                      <video
+                        src={`${import.meta.env.VITE_BASE_URL}/${f}`}
+                        width="80"
+                        height="50"
+                        controls
+                        className="border rounded mb-1"
+                      />
+                      <div style={{ fontSize: "0.75rem", maxWidth: "80px", wordBreak: "break-word" }}>
+                        <img src={`${import.meta.env.VITE_BASE_URL}/${f}`} target="_blank" rel="noopener noreferrer" />
+                      </div>
+                    </li>
+                  );
+                }
+
+                // Other files
+                return (
+                  <li key={idx} className="text-center">
+                    <div className="border rounded p-2 mb-1" style={{ width: "50px", height: "50px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      {ext.toUpperCase()}
+                    </div>
+                    <div style={{ fontSize: "0.75rem", maxWidth: "60px", wordBreak: "break-word" }}>
+                      <a href={f} target="_blank" rel="noopener noreferrer">{fileName}</a>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
           </Card.Body>
         </ComponentCard>
-      </Card.Body>
-    </div>
+
+
+
+      </Card.Body >
+    </div >
   );
 }

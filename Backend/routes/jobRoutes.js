@@ -1,53 +1,38 @@
 const express = require("express");
+const router = express.Router();
 const multer = require("multer");
 const path = require("path");
-const fs = require("fs");
-const {
-  createJob,
-  getJobs,
-  getJobById,
-  updateJob,
-  deleteJob,
-} = require("../controllers/jobController");
+const { createJob, getJobs, getJobById, updateJob, deleteJob } = require("../controllers/jobController");
 
-const router = express.Router();
-
-// Ensure uploads/jobs folder exists
-const uploadPath = path.join(__dirname, "..", "uploads", "jobs");
-if (!fs.existsSync(uploadPath)) {
-  fs.mkdirSync(uploadPath, { recursive: true });
-}
-
-// Multer storage config
+// Multer setup for file uploads
+const uploadDir = path.join(__dirname, "../uploads/jobs");
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadPath);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix =
-      Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(
-      null,
-      file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname)
-    );
-  },
+  destination: (req, file, cb) => cb(null, uploadDir),
+  filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname)),
 });
-
 const upload = multer({ storage });
 
-// Routes
-router.post(
-  "/",
-  upload.fields([{ name: "files" }, { name: "logo", maxCount: 1 }]),
-  createJob
-);
+// ---------------- ROUTES ----------------
+
+// GET all jobs
 router.get("/", getJobs);
+
+// GET single job by ID
 router.get("/:id", getJobById);
-router.put(
-  "/:id",
-  upload.fields([{ name: "files" }, { name: "logo", maxCount: 1 }]),
-  updateJob
-);
+
+// CREATE new job
+router.post("/", upload.fields([
+  { name: "files", maxCount: 12 },
+  { name: "logo", maxCount: 1 }
+]), createJob);
+
+// UPDATE job
+router.put("/:id", upload.fields([
+  { name: "files", maxCount: 12 },
+  { name: "logo", maxCount: 1 }
+]), updateJob);
+
+// DELETE job
 router.delete("/:id", deleteJob);
 
 module.exports = router;
