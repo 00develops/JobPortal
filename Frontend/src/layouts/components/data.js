@@ -70,5 +70,9 @@ export const menuItems = [{
     key:'job',
     label:'Job List',
     url:'/admin/jobs'
+  },{
+    key:'admit-card',
+    label:'Admit Card',
+    url:'/admin/admit-card'
   },]},
  ];

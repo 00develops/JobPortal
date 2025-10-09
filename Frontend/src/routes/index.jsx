@@ -218,6 +218,8 @@ const Jobs = lazy(() => import('@/views/jobs'));
 const EditJob = lazy(() => import('@/views/jobs/components/EditJob'));
 const AddJob = lazy(() => import('@/views/jobs/components/AddJob'));
 const ViewJob = lazy(() => import('@/views/jobs/components/ViewJob'));
+const AdmitCard = lazy(() => import('@/views/admit'));
+const AddAdmitCard = lazy(() => import('@/views/admit/components/AddAdmitCard'));
 
 
 
@@ -293,6 +295,14 @@ const jobRoutes=[{
 }
 ];
 
+const admitRoutes=[{  
+  path:'/admin/admit-card',
+  element:<AdmitCard/>
+},{
+  path:'/admin/admit-card/add',
+  element:<AddAdmitCard/>
+}]; 
+
 // admin routes wrapped in main layout + protected route
 const adminRoutes = [
   {
@@ -309,6 +319,7 @@ const adminRoutes = [
       ...dashboardRoutes,
       ...categoryRoutes,
       ...jobRoutes,
+      ...admitRoutes,
     ],
   },
 ];

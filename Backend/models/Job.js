@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 
-// Subschemas
 const ImportantDateSchema = new mongoose.Schema({
   label: { type: String, required: true, trim: true },
   date: { type: Date, required: true },
@@ -12,19 +11,15 @@ const FeeSchema = new mongoose.Schema({
 });
 
 const VacancySchema = new mongoose.Schema({
-  list: [
-    {
-      postName: { type: String, required: true, trim: true },
-      total: { type: Number, default: 0 },
-      UR: { type: Number, default: 0 },
-      EWS: { type: Number, default: 0 },
-      OBC: { type: Number, default: 0 },
-      SC: { type: Number, default: 0 },
-      ST: { type: Number, default: 0 },
-      PwBD: { type: Number, default: 0 }
-    }
-  ],
-  extraRequirements: { type: String, default: "" }
+  postName: { type: String, required: true, trim: true },
+  total: { type: Number, default: 0 },
+  UR: { type: Number, default: 0 },
+  EWS: { type: Number, default: 0 },
+  OBC: { type: Number, default: 0 },
+  SC: { type: Number, default: 0 },
+  ST: { type: Number, default: 0 },
+  PwBD: { type: Number, default: 0 },
+  extraRequirements: { type: String, default: "" },
 });
 
 const LinkSchema = new mongoose.Schema({
@@ -33,28 +28,20 @@ const LinkSchema = new mongoose.Schema({
   url: { type: String, default: "", trim: true },
 });
 
-const SectionSchema = new mongoose.Schema({
-  title: { type: String, default: "", trim: true },
-  description: { type: String, default: "" },      // Plain text
-  richDescription: { type: String, default: "" },  // HTML / Rich text
-});
-
-
-// MetaDetails schema
 const MetaDetailsSchema = new mongoose.Schema({
   title: { type: String, default: "" },
   description: { type: String, default: "" },
-   keywords: { type: String, default: "" },
-  schemas: { type: String, default: "" }
+  keywords: { type: String, default: "" },
+  schemas: { type: String, default: "" },
 });
 
-// Main Job Schema
 const JobSchema = new mongoose.Schema(
   {
-    // Basic Job Details
-    postName: { type: String, required: true, trim: true },
-    organization: { type: String, required: true, trim: true },
-    advtNumber: { type: String, required: true, trim: true },
+    // Relaxed required constraints to allow auto-create with minimal data
+    postName: { type: String, default: "", trim: true },
+    organization: { type: String, default: "", trim: true },
+    advtNumber: { type: String, default: "", trim: true },
+
     jobType: { type: String, default: "", trim: true },
     sector: { type: String, default: "", trim: true },
     jobCategory: { type: String, default: "", trim: true },
@@ -63,48 +50,37 @@ const JobSchema = new mongoose.Schema(
     modeOfExam: { type: String, default: "" },
     shortDescription: { type: String, default: "" },
 
-    // Important Dates
+    // New field to match UI
+    expiryDate: { type: Date },
+
     dates: { type: [ImportantDateSchema], default: [] },
-
-    // Application Fee
     fees: { type: [FeeSchema], default: [] },
-
-    // Vacancies
     vacancies: { type: [VacancySchema], default: [] },
 
-    // Eligibility
     eligibility: {
       qualification: { type: String, default: "Graduate" },
-      finalYearEligible: { type: String, default: "",trim:true },
-      ageMin: { type: Number },
-      ageMax: { type: Number },
+      finalYearEligible: { type: String, default: "", trim: true },
+      ageMin: { type: Number, default: 0 },
+      ageMax: { type: Number, default: 0 },
       ageRelaxation: { type: String, default: "" },
-      gateRequired: { type: String, default: "",trim:true },
+      gateRequired: { type: String, default: "", trim: true },
       gateCodes: { type: String, default: "" },
-      extraRequirements: { type: String, default: "" }, // Rich text
+      extraRequirements: { type: String, default: "" },
     },
 
-    // Salary
     salary: {
       payScale: { type: String, default: "" },
       inHand: { type: String, default: "" },
       allowances: { type: String, default: "" },
     },
 
-    // Selection Process
     selection: { type: [String], default: [] },
-
-    // Links
     links: { type: [LinkSchema], default: [] },
+    howToApply: { type: String, default: "" },
 
-    // How to Apply
-    howToApply: { type: String, default: "" }, // Rich text
-
-    // Uploaded files / logo
-    files: { type: [String], default: [] }, // store file URLs / paths
+    files: { type: [String], default: [] },
     logo: { type: String, default: "" },
 
-    // Meta
     metaDetails: { type: MetaDetailsSchema, default: () => ({}) },
   },
   { timestamps: true }

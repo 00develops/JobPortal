@@ -2,37 +2,69 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const path = require("path");
-const { createJob, getJobs, getJobById, updateJob, deleteJob } = require("../controllers/jobController");
+const fs = require("fs");
+const {
+  createJob,
+  createJobDraft, // optional if used elsewhere
+  getJobs,
+  getJobById,
+  updateJob,
+  deleteJob,
+  saveJobSection,
+  uploadJobFiles,
+  deleteJobArrayItem,
+} = require("../controllers/jobController");
 
-// Multer setup for file uploads
+// Ensure upload directory exists
 const uploadDir = path.join(__dirname, "../uploads/jobs");
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Multer setup
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname)),
+  filename: (req, file, cb) =>
+    cb(null, `${Date.now()}${path.extname(file.originalname)}`),
 });
 const upload = multer({ storage });
-
-// ---------------- ROUTES ----------------
 
 // GET all jobs
 router.get("/", getJobs);
 
-// GET single job by ID
+// GET by id
 router.get("/:id", getJobById);
 
-// CREATE new job
-router.post("/", upload.fields([
-  { name: "files", maxCount: 12 },
-  { name: "logo", maxCount: 1 }
-]), createJob);
+// Create job (multipart)
+router.post(
+  "/",
+  upload.fields([
+    { name: "files", maxCount: 12 },
+    { name: "logo", maxCount: 1 },
+  ]),
+  createJob
+);
 
-// UPDATE job
-router.put("/:id", upload.fields([
-  { name: "files", maxCount: 12 },
-  { name: "logo", maxCount: 1 }
-]), updateJob);
+// Update entire job
+router.put(
+  "/:id",
+  upload.fields([
+    { name: "files", maxCount: 12 },
+    { name: "logo", maxCount: 1 },
+  ]),
+  updateJob
+);
 
-// DELETE job
+// Delete job
 router.delete("/:id", deleteJob);
+
+// Section-wise save
+router.post("/save-section", saveJobSection);
+
+// Upload files separately
+router.post("/files", upload.array("files", 12), uploadJobFiles);
+
+// Delete array item by index
+router.delete("/:id/section/:section/:index", deleteJobArrayItem);
 
 module.exports = router;

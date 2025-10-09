@@ -30,6 +30,7 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/subcategories", subcategoryRoutes);
 app.use("/api/jobs", jobRoutes);
 
+
 // Test route
 app.get("/", (req, res) => {
   res.send("API is running...");
